@@ -1,0 +1,4 @@
+startepoch0
+disriminator_loss : 0.6741862893104553
+gan_loss : [82.432938, 0.82432938, 1.1920935e-07]
+validate_genn_loss : 0.628292
