@@ -9,7 +9,7 @@ from keras.layers.normalization import BatchNormalization
 from keras.layers.convolutional import UpSampling2D,Conv2D, MaxPooling2D,Conv2DTranspose
 from keras.layers.advanced_activations import LeakyReLU
 
-
+# convolution batchnormalization relu
 def CBR(ch,shape,bn=True,sample='down',activation=LeakyReLU, dropout=False):
     model = Sequential()
     if sample=='down':
