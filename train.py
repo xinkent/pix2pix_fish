@@ -19,9 +19,6 @@ K.set_session(sess)
 
 def train(patch_size, batch_size, epochs):
 
-    def l1_loss(y_true,y_pred):
-        return K.mean(K.abs(y_pred - y_true),axis=[1,2,3])
-
     if not os.path.exists("./result"):
         os.mkdir("./result")
 
@@ -33,11 +30,13 @@ def train(patch_size, batch_size, epochs):
     o = open(resultDir + "/log","w")
     o.write("start")
     o.close()
+
     """
     modelDir = "./model"
     if not os.path.exists(modelDir):
         os.mkdir(modelDir)
     """
+
     patch_size = patch_size
     batch_size = batch_size
     nb_epoch = epochs
@@ -92,6 +91,7 @@ def train(patch_size, batch_size, epochs):
             g_loss = gan.train_on_batch([label_batch, img_batch], [img_batch, gan_y])
             # print("gan_loss : " + str(g_loss) )
 
+            # visualize generated images
             if epoch % 25 == 0 and index == 0:
                 test_ind = np.random.permutation(test_n)
                 test_img_batch = test_img[test_ind[0:batch_size],:,:,:]
@@ -100,6 +100,8 @@ def train(patch_size, batch_size, epochs):
                 validation_gen_loss = gen.test_on_batch(test_label_batch,test_img_batch)
 
                 image = combine_images(test_label_batch)
+                image = image.reshape(image.shape[0:2])
+                image = image*128.0+128.0
                 Image.fromarray(image.astype(np.uint8)).save(resultDir + "/vlabel_" + str(epoch)+"epoch.png")
 
                 image = combine_images(test_img_batch)
@@ -112,16 +114,19 @@ def train(patch_size, batch_size, epochs):
 
 
                 image = combine_images(label_batch)
+                image = image.reshape(image.shape[0:2])
+                image = image*128.0+128.0
                 Image.fromarray(image.astype(np.uint8)).save(resultDir + "/label_" + str(epoch)+"epoch.png")
+
                 image = combine_images(img_batch)
                 image = image*128.0+128.0
                 Image.fromarray(image.astype(np.uint8)).save(resultDir + "/gt_" + str(epoch)+"epoch.png")
 
                 generated_img = gen.predict(label_batch)
-
                 image = combine_images(generated_img)
                 image = image*128.0+128.0
                 Image.fromarray(image.astype(np.uint8)).save(resultDir + "/generated_" + str(epoch)+"epoch.png")
+
                 o.write("epoch"+str(epoch) + "\n")
                 o.write("disriminator_loss : " + str(d_loss) +"\n")
                 o.write("gan_loss : " + str(g_loss) +"\n")
