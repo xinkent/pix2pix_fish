@@ -2,3 +2,7 @@ startepoch0
 disriminator_loss : 0.6741862893104553
 gan_loss : [82.432938, 0.82432938, 1.1920935e-07]
 validate_genn_loss : 0.628292
+epoch25
+disriminator_loss : 0.022036412730813026
+gan_loss : [7.1067696, 0.067194402, 0.38732898]
+validate_genn_loss : 0.108429
