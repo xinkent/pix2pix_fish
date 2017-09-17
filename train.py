@@ -44,7 +44,7 @@ def train(patch_size, batch_size, epochs):
     data_ind = np.random.permutation(400)
     train_img, train_label = load_dataset(data_ind[0:350])
     # train_label = train_label[:,:,:,np.newaxis]
-    test_img, test_label = load_dataset(data_ind[0:350])ß
+    test_img, test_label = load_dataset(data_ind[0:350])
     # test_label = test_label[:,:,:,np.newaxis]
 
 
