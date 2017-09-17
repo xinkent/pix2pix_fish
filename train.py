@@ -41,9 +41,10 @@ def train(patch_size, batch_size, epochs):
     batch_size = batch_size
     nb_epoch = epochs
 
-    train_img, train_label = load_dataset(data_range = (0,350))
+    data_ind = np.random.permutation(400)
+    train_img, train_label = load_dataset(data_ind[0:350])
     # train_label = train_label[:,:,:,np.newaxis]
-    test_img, test_label = load_dataset(data_range=(350,400))
+    test_img, test_label = load_dataset(data_ind[0:350])ß
     # test_label = test_label[:,:,:,np.newaxis]
 
 
@@ -153,4 +154,4 @@ def combine_images(generated_images):
     return image
 
 if __name__ == '__main__':
-    train(patch_size=64, batch_size=10, epochs=1000)
+    train(patch_size=64, batch_size=20, epochs=1000)
