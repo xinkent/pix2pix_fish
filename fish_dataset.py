@@ -12,7 +12,7 @@ def load_dataset(dataDir='./dataset/train_data/', data_range = (0,300)):
 
         imgStart = 12313
         labelStart = 1
-        for i in range(data_range[0], data_range[1]):
+        for i in range(data_range):
             imgNum = imgStart + int(i*(29/10))
             labelNum = i + 1
             img = Image.open(dataDir + "GP029343_%06d.png"%imgNum)
