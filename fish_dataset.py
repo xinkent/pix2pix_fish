@@ -4,7 +4,7 @@ from PIL import Image
 from io import BytesIO
 
 
-def load_dataset(dataDir='./dataset/train_data/', data_range):
+def load_dataset(dataDir='./dataset/train_data/', data_range=range(0,300)):
         print("load dataset start")
         print("     from: %s"%dataDir)
         imgDataset = []
@@ -12,7 +12,7 @@ def load_dataset(dataDir='./dataset/train_data/', data_range):
 
         imgStart = 12313
         labelStart = 1
-        for i in range(data_range):
+        for i in data_range:
             imgNum = imgStart + int(i*(29/10))
             labelNum = i + 1
             img = Image.open(dataDir + "GP029343_%06d.png"%imgNum)
