@@ -79,11 +79,8 @@ def generator():
 def GAN(generator, discriminator):
 
     gen_input = Input(shape=(512,256,1))
-    img_input = Input(shape=(512,256,3))
-
     generated_image = generator(gen_input)
-    DCGAN_output = discriminator([gen_input,img_input])
-
-    DCGAN = Model(inputs=[gen_input,img_input],outputs=[generated_image, DCGAN_output],name="DCGAN")
+    DCGAN_output = discriminator([gen_input,generated_image])
+    DCGAN = Model(inputs=[gen_input],outputs=[generated_image, DCGAN_output],name="DCGAN")
 
     return DCGAN
