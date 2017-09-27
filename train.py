@@ -37,12 +37,6 @@ def train():
     if not os.path.exists(resultDir):
         os.mkdir(resultDir)
 
-
-    """
-    modelDir = "./model"
-    if not os.path.exists(modelDir):
-        os.mkdir(modelDir)
-    """
     patch_size = args.patchsize
     batch_size = args.batchsize
     nb_epoch = args.epoch
@@ -142,6 +136,7 @@ def train():
                 image = image*128.0+128.0
                 Image.fromarray(image.astype(np.uint8)).save(resultDir + "/generated_" + str(epoch)+"epoch.png")
                 o.write(str(epoch) + "," + str(d_loss) + "," + str(g_loss[1]) + "," + str(g_loss[2]) + "," + str(validation_gan_loss[1]) +"," + str(validation_gan_loss[2]) + "\n")
+                print(validation_gan_loss)
         o.close()
     # o.close()
     # gan.save("gan_" + "patch" + str(patch_size) + ".h5")
