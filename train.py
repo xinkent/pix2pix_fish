@@ -138,8 +138,8 @@ def train():
                 o.write(str(epoch) + "," + str(d_loss) + "," + str(g_loss[1]) + "," + str(g_loss[2]) + "," + str(validation_gan_loss[1]) +"," + str(validation_gan_loss[2]) + "\n")
                 print(validation_gan_loss)
         o.close()
-    # o.close()
-    # gan.save("gan_" + "patch" + str(patch_size) + ".h5")
+    o.close()
+    gan.save("lambda" + str(lambda) + ".h5")
 
 
 
