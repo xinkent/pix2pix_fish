@@ -1,4 +1,3 @@
-
 import keras
 import keras.backend as K
 import numpy as np
@@ -10,6 +9,7 @@ from PIL import Image
 import math
 import os
 import tensorflow as tf
+import argparse
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"
 config = tf.ConfigProto()
@@ -53,9 +53,10 @@ def train():
     o.write("epoch,dis_loss,gan_mae,gan_entropy,vgan_mae,vgan_entropy" + "\n")
     o.close()
 
-    train_img, train_label = load_dataset(data_range=(1,300))
+    data_ind = np.random.permutation(400)
+    train_img, train_label = load_dataset(data_range=data_ind[0:350])
     # train_label = train_label[:,:,:,np.newaxis]
-    test_img, test_label = load_dataset(data_range=(300,379))
+    test_img, test_label = load_dataset(data_range=data_ind[350:])
     # test_label = test_label[:,:,:,np.newaxis]
 
 
@@ -71,7 +72,7 @@ def train():
     gen = generator()
     gen.compile(loss = 'mae', optimizer=opt_generator)
 
-    dis = discriminator2()
+    dis = discriminator()
     # dis = discriminator3(patch_size)
     dis.trainable = False
 
@@ -113,12 +114,9 @@ def train():
                 validation_gan_loss = gan.test_on_batch([test_label_batch],[test_img_batch, gan_y])
 
                 image = combine_images(test_label_batch)
-                x = np.ones((image.shape[0],image.shape[1],3)).astype(np.uint8)*255
-                # x[:,:,0] = np.uint8(15*image.reshape(image.shape[0],image.shape[1]))
-                x[:,:,0] = 0
-                for i in range(12):
-                    x[:,:,0] += np.uint8(15*i*image[:,:,i])
-                Image.fromarray(x,mode="HSV").convert('RGB').save(resultDir + "/vlabel_" + str(epoch)+"epoch.png")
+                image = image.reshape(image.shape[0:2])
+                image = image*128.0 + 128.0
+                Image.fromarray(image.astype(np.uint8)).save(resultDir + "/vlabel_" + str(epoch)+"epoch.png")
 
                 image = combine_images(test_img_batch)
                 image = image*128.0+128.0
@@ -130,12 +128,9 @@ def train():
 
 
                 image = combine_images(label_batch)
-                x = np.ones((image.shape[0],image.shape[1],3)).astype(np.uint8)*255
-                # x[:,:,0] = np.uint8(15*image.reshape(image.shape[0],image.shape[1]))
-                x[:,:,0] = 0
-                for i in range(12):
-                    x[:,:,0] += np.uint8(15*i*image[:,:,i])
-                Image.fromarray(x,mode="HSV").convert('RGB').save(resultDir + "/label_" + str(epoch)+"epoch.png")
+                image = image.reshape(image.shape[0:2])
+                image = image*128.0 + 128.0
+                Image.fromarray(image.astype(np.uint8)).save(resultDir + "/label_" + str(epoch)+"epoch.png")
 
                 image = combine_images(img_batch)
                 image = image*128.0+128.0
@@ -146,7 +141,7 @@ def train():
                 image = combine_images(generated_img)
                 image = image*128.0+128.0
                 Image.fromarray(image.astype(np.uint8)).save(resultDir + "/generated_" + str(epoch)+"epoch.png")
-                o.write(str(epoch) + "," + str(d_loss) + "," + str(g_loss[1]) + "," + str(g_loss[2]) + "," + str(validation_gan_loss[1]) +"," + str(validate_gan_loss[2]) + "\n")
+                o.write(str(epoch) + "," + str(d_loss) + "," + str(g_loss[1]) + "," + str(g_loss[2]) + "," + str(validation_gan_loss[1]) +"," + str(validation_gan_loss[2]) + "\n")
         o.close()
     # o.close()
     # gan.save("gan_" + "patch" + str(patch_size) + ".h5")
