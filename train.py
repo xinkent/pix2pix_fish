@@ -139,7 +139,7 @@ def train():
                 print(validation_gan_loss)
         o.close()
     o.close()
-    gan.save("lambda" + str(lambda) + ".h5")
+    gan.save("lambda" + str(lmd) + ".h5")
 
 
 
