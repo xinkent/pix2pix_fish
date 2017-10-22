@@ -51,11 +51,12 @@ def train():
     o.write("epoch,dis_loss,gan_mae,gan_entropy,vgan_mae,vgan_entropy" + "\n")
     o.close()
 
-    # data_ind = np.random.permutation(400)
-    data_ind = np.arange(400)
-    train_img, train_label = load_dataset(data_range=data_ind[0:350])
+    n = 1145
+    data_ind = np.random.permutation(n)
+    # data_ing = np.arange(n)
+    train_img, train_label = load_dataset(data_range=data_ind[:int(n*0.7)])
     # train_label = train_label[:,:,:,np.newaxis]
-    test_img, test_label = load_dataset(data_range=data_ind[350:])
+    test_img, test_label = load_dataset(data_range=data_ind[int(n*0.7):])
     # test_label = test_label[:,:,:,np.newaxis]
 
     # Create optimizers
@@ -113,21 +114,14 @@ def train():
         gan_loss = np.mean(np.array(gan_loss_list), axis=1)
 
         # validation
-        for index in range(int(test_n/batch_size)):
-            test_ind = np.random.permutation(test_n)
-            test_img_batch = test_img[test_ind[(index*batch_size) : ((index+1)*batch_size)],:,:,:]
-            test_label_batch = test_label[test_ind[(index*batch_size) : ((index+1)*batch_size)],:,:,:]
-            test_generated_img = gen.predict(test_label_batch)
-            test_labels = np.concatenate([test_label_batch,test_label_batch])
-            test_imgs = np.concatenate([test_img_batch,test_generated_img])
-            dis_y = np.array([1] * batch_size + [0] * batch_size)
-            d_loss = np.array(dis.test_on_batch([test_labels,test_imgs],dis_y ))
-            test_dis_loss_list.append(d_loss)
-            gan_y = np.array([1] * batch_size)
-            g_loss = np.array(gan.test_on_batch([test_label_batch], [test_img_batch, gan_y]))
-            test_gan_loss_list.append(g_loss)
-        test_dis_loss = np.mean(np.array(test_dis_loss_list))
-        test_gan_loss = np.mean(np.array(test_gan_loss_list), axis=1)
+
+        test_generated_img = gen.predict(test_label)
+        test_imgs = np.concatenate([test_img,test_generated_img])
+        test_labels = np.concatenate([test_label,test_label])
+        dis_y = np.array([1] * test_n + [0] * test_n)
+        test_dis_loss = np.array(dis.test_on_batch([test_labels,test_imgs],dis_y ))
+        gan_y = np.array([1] * test_n)
+        test_gan_loss = np.array(gan.test_on_batch([test_label], [test_img, gan_y]))
 
         o.write(str(epoch) + "," + str(dis_loss) + "," + str(gan_loss[1]) + "," + str(gan_loss[2]) + "," + str(test_gan_loss[1]) +"," + str(test_gan_loss[2]) + "\n")
 
