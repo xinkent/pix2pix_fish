@@ -111,19 +111,28 @@ def train():
             g_loss = np.array(gan.train_on_batch([label_batch], [img_batch, gan_y]))
             gan_loss_list.append(g_loss)
         dis_loss = np.mean(np.array(dis_loss_list))
-        gan_loss = np.mean(np.array(gan_loss_list), axis=1)
+        gan_loss = np.mean(np.array(gan_loss_list), axis=0)
 
         # validation
+        for index in range(int(test_n/batch_size)):
+            img_batch = test_img[test_ind[(index*batch_size) : ((index+1)*batch_size)],:,:,:]
+            label_batch =test_label[test_ind[(index*batch_size) : ((index+1)*batch_size)],:,:,:]
+            generated_img = gen.predict(label_batch)
 
-        test_generated_img = gen.predict(test_label)
-        test_imgs = np.concatenate([test_img,test_generated_img])
-        test_labels = np.concatenate([test_label,test_label])
-        dis_y = np.array([1] * test_n + [0] * test_n)
-        test_dis_loss = np.array(dis.test_on_batch([test_labels,test_imgs],dis_y ))
-        gan_y = np.array([1] * test_n)
-        test_gan_loss = np.array(gan.test_on_batch([test_label], [test_img, gan_y]))
+            y_real = np.array([1] * batch_size)
+            y_fake = np.array([0] * batch_size)
+            d_real_loss = np.array(dis.train_on_batch([label_batch,img_batch],y_real))
+            d_fake_loss =np.array(dis.train_on_batch([label_batch,generated_img],y_fake))
+            d_loss = d_real_loss + d_fake_loss
+            test_dis_loss_list.append(d_loss)
+            gan_y = np.array([1] * batch_size)
+            g_loss = np.array(gan.train_on_batch([label_batch], [img_batch, gan_y]))
+            test_gan_loss_list.append(g_loss)
+        test_dis_loss = np.mean(np.array(test_dis_loss_list))
+        test_gan_loss = np.mean(np.array(test_gan_loss_list), axis=0)
+        
+        o.write(str(epoch) + "," + str(dis_loss) + "," + str(gan_loss[1]) + "," + str(gan_loss[2]) + "," + str(test_dis_loss) + ","+ str(test_gan_loss[1]) +"," + str(test_gan_loss[2]) + "\n")
 
-        o.write(str(epoch) + "," + str(dis_loss) + "," + str(gan_loss[1]) + "," + str(gan_loss[2]) + "," + str(test_gan_loss[1]) +"," + str(test_gan_loss[2]) + "\n")
 
 
         # visualize
