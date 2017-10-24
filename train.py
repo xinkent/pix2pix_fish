@@ -52,8 +52,8 @@ def train():
     o.close()
 
     n = 1145
-    data_ind = np.random.permutation(n)
-    # data_ing = np.arange(n)
+    # data_ind = np.random.permutation(n)
+    data_ing = np.arange(n)
     train_img, train_label = load_dataset(data_range=data_ind[:int(n*0.7)])
     # train_label = train_label[:,:,:,np.newaxis]
     test_img, test_label = load_dataset(data_range=data_ind[int(n*0.7):])
@@ -130,7 +130,7 @@ def train():
             test_gan_loss_list.append(g_loss)
         test_dis_loss = np.mean(np.array(test_dis_loss_list))
         test_gan_loss = np.mean(np.array(test_gan_loss_list), axis=0)
-        
+
         o.write(str(epoch) + "," + str(dis_loss) + "," + str(gan_loss[1]) + "," + str(gan_loss[2]) + "," + str(test_dis_loss) + ","+ str(test_gan_loss[1]) +"," + str(test_gan_loss[2]) + "\n")
 
 
