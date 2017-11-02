@@ -66,20 +66,25 @@ def load_dataset2(dataDir='/data1/train_data1/', data_range=range(0,300),skip=Tr
             img = Image.open(dataDir + "up/train_up%05d.png"%imgNum)
             label_color = Image.open(dataDir + "up_night/night_up%05d.png"%clabelNum)
             label_sonar = Image.open(dataDir + "sonar/" + "2017-03-02_105804_%d_width_773_height_1190.png"%slabelNum)
-
-
             label_sonar = label_sonar.convert("L")
-            img = img.resize((512,256), Image.BILINEAR)
-            img= img.transpose(Image.ROTATE_90)
-            label_sonar = label_sonar.resize((256, 512),Image.BILINEAR)
-            label_color = label_color.resize((256, 512),Image.BILINEAR)
+
+            w,h = img.size
+            r = 300/min(w,h)
+            img = img.resize((int(r*w), int(r*h)), Image.BILINEAR)
+            label_color = label_color.resize((int(r*w), int(r*h)),Image.BILINEAR)
+            label_sonar = label_sonar.resize((int(r*w), int(r*h)),Image.BILINEAR)
 
             img = np.asarray(img)/128.0-1.0
-
             label_sonar = np.asarray(label_sonar)/128.0-1.0
             label_sonar = label_sonar[:,:,np.newaxis]
-
             label_color = np.asarray(label_color)/128.0-1.0
+
+            h,w = img.shape
+            xl = np.random.randint(0,w-256)
+            yl = np.random.randint(0,h-512)
+            img = img[yl:yl+512, xl:xl+256, :]
+            label_sonar = label_sonar[yl:yl+512, xl:xl_256,:]
+            label_color = label_color[yl:yl+512, xl:xl_256,:]
 
             imgDataset.append(img)
             slabelDataset.append(label_sonar)
