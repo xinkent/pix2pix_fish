@@ -54,7 +54,7 @@ def train():
     n = 1145
     # data_ind = np.random.permutation(n)
     data_ind = np.arange(n)
-    train_img, train_slabel_clabel = load_dataset2(data_range=data_ind[:int(n*0.7)])
+    train_img, train_slabel, train_clabel = load_dataset2(data_range=data_ind[:int(n*0.7)])
     # train_label = train_label[:,:,:,np.newaxis]
     test_img, test_slabel, test_clabel = load_dataset2(data_range=data_ind[int(n*0.7):])
     # test_label = test_label[:,:,:,np.newaxis]

@@ -63,8 +63,8 @@ def load_dataset2(dataDir='/data1/train_data1/', data_range=range(0,300),skip=Tr
             imgNum = imgStart + i
             slabelNum = slabelStart + i
             clabelNum = clabelStart + i
-            img = Image.open(dataDir + "up/train_up"+str(imgNum) + ".png")
-            label_color = Image.open(dataDir + "up_night/night_up" + str(imgNum) + ".png")
+            img = Image.open(dataDir + "up/train_up%05d.png"%imgNum)
+            label_color = Image.open(dataDir + "up_night/night_up%05d.png"%clabelNum)
             label_sonar = Image.open(dataDir + "sonar/" + "2017-03-02_105804_%d_width_773_height_1190.png"%slabelNum)
 
 

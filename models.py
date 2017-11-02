@@ -57,7 +57,7 @@ def generator():
     input2 = Input(shape=(512,256,3))
     enc_2 = Conv2D(filters=16, kernel_size=(3,3), strides=1, padding='same',input_shape=(512,256,1))(input1)
 
-    enc3 = concatenate([enc_1,enc_2])
+    enc_3 = concatenate([enc_1,enc_2])
 
     enc_4 = CBR(64,(512,256,32))(enc_3)
     enc_5 = CBR(128,(256,128,64))(enc_4)
@@ -76,7 +76,7 @@ def generator():
     x = CBR(64,(128,64,256),sample='up',activation='relu',dropout=False)(concatenate([x,enc_5]))
     x = CBR(32,(256,128,128),sample='up',activation='relu',dropout=False)(concatenate([x,enc_4]))
     output = Conv2D(filters=3, kernel_size=(3,3),strides=1,padding="same")(concatenate([x,enc_3]))
-    model = Model(inputs=input1, outputs=output)
+    model = Model(inputs=[input1,input2], outputs=output)
     return(model)
 
 
@@ -86,6 +86,6 @@ def GAN(generator, discriminator):
     c_input = Input(shape=(512,256,3))
     generated_image = generator([s_input,c_input])
     DCGAN_output = discriminator([s_input,generated_image])
-    DCGAN = Model(inputs=[gen_input],outputs=[generated_image, DCGAN_output],name="DCGAN")
+    DCGAN = Model(inputs=[s_input,c_input],outputs=[generated_image, DCGAN_output],name="DCGAN")
 
     return DCGAN
