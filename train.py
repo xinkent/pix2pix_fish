@@ -4,7 +4,7 @@ import numpy as np
 from keras.utils import generic_utils
 from keras.optimizers import Adam, SGD
 from models import discriminator, generator, GAN
-from fish_dataset import load_dataset2
+from fish_dataset import load_dataset
 from PIL import Image
 import math
 import os
@@ -54,9 +54,9 @@ def train():
     n = 1145
     # data_ind = np.random.permutation(n)
     data_ind = np.arange(n)
-    train_img, train_slabel, train_clabel = load_dataset2(data_range=data_ind[:int(n*0.7)])
+    train_img, train_label = load_dataset(data_range=data_ind[:int(n*0.7)])
     # train_label = train_label[:,:,:,np.newaxis]
-    test_img, test_slabel, test_clabel = load_dataset2(data_range=data_ind[int(n*0.7):])
+    test_img,  test_label = load_dataset(data_range=data_ind[int(n*0.7):])
     # test_label = test_label[:,:,:,np.newaxis]
 
     # Create optimizers
@@ -99,18 +99,17 @@ def train():
         # training
         for index in range(int(train_n/batch_size)):
             img_batch = train_img[ind[(index*batch_size) : ((index+1)*batch_size)],:,:,:]
-            slabel_batch =train_slabel[ind[(index*batch_size) : ((index+1)*batch_size)],:,:,:]
-            clabel_batch =train_clabel[ind[(index*batch_size) : ((index+1)*batch_size)],:,:,:]
-            generated_img = gen.predict([slabel_batch,clabel_batch])
+            label_batch =train_label[ind[(index*batch_size) : ((index+1)*batch_size)],:,:,:]
+            generated_img = gen.predict(label_batch)
 
             y_real = np.array([1] * batch_size)
             y_fake = np.array([0] * batch_size)
-            d_real_loss = np.array(dis.train_on_batch([slabel_batch,img_batch],y_real))
-            d_fake_loss =np.array(dis.train_on_batch([slabel_batch,generated_img],y_fake))
+            d_real_loss = np.array(dis.train_on_batch([label_batch,img_batch],y_real))
+            d_fake_loss =np.array(dis.train_on_batch([label_batch,generated_img],y_fake))
             d_loss = d_real_loss + d_fake_loss
             dis_loss_list.append(d_loss)
             gan_y = np.array([1] * batch_size)
-            g_loss = np.array(gan.train_on_batch([slabel_batch,clabel_batch], [img_batch, gan_y]))
+            g_loss = np.array(gan.train_on_batch(label_batch, [img_batch, gan_y]))
             gan_loss_list.append(g_loss)
         dis_loss = np.mean(np.array(dis_loss_list))
         gan_loss = np.mean(np.array(gan_loss_list), axis=0)
@@ -118,18 +117,17 @@ def train():
         # validation
         for index in range(int(test_n/batch_size)):
             img_batch = test_img[test_ind[(index*batch_size) : ((index+1)*batch_size)],:,:,:]
-            slabel_batch =test_slabel[test_ind[(index*batch_size) : ((index+1)*batch_size)],:,:,:]
-            clabel_batch =test_clabel[test_ind[(index*batch_size) : ((index+1)*batch_size)],:,:,:]
-            generated_img = gen.predict([slabel_batch,clabel_batch])
+            label_batch =test_label[test_ind[(index*batch_size) : ((index+1)*batch_size)],:,:,:]
+            generated_img = gen.predict(label_batch)
 
             y_real = np.array([1] * batch_size)
             y_fake = np.array([0] * batch_size)
-            d_real_loss = np.array(dis.test_on_batch([slabel_batch,img_batch],y_real))
-            d_fake_loss =np.array(dis.test_on_batch([slabel_batch,generated_img],y_fake))
+            d_real_loss = np.array(dis.test_on_batch([label_batch,img_batch],y_real))
+            d_fake_loss =np.array(dis.test_on_batch([label_batch,generated_img],y_fake))
             d_loss = d_real_loss + d_fake_loss
             test_dis_loss_list.append(d_loss)
             gan_y = np.array([1] * batch_size)
-            g_loss = np.array(gan.test_on_batch([slabel_batch,clabel_batch], [img_batch, gan_y]))
+            g_loss = np.array(gan.test_on_batch(label_batch, [img_batch, gan_y]))
             test_gan_loss_list.append(g_loss)
         test_dis_loss = np.mean(np.array(test_dis_loss_list))
         test_gan_loss = np.mean(np.array(test_gan_loss_list), axis=0)
@@ -141,13 +139,12 @@ def train():
         # visualize
         if epoch % 50 == 0 :
             img_batch = train_img[ind[0:9],:,:,:]
-            slabel_batch =train_slabel[ind[0:9],:,:,:]
-            clabel_batch =train_clabel[ind[0:9],:,:,:]
+            label_batch =train_label[ind[0:9],:,:,:]
 
-            image = combine_images(slabel_batch)
-            generated_img = gen.predict([slabel_batch,clabel_batch])
+            image = combine_images(label_batch)
+            generated_img = gen.predict(label_batch)
 
-            image = combine_images(slabel_batch)
+            image = combine_images(label_batch)
             image = image.reshape(image.shape[0:2])
             image = image*128.0+128.0
             Image.fromarray(image.astype(np.uint8)).save(resultDir + "/label_" + str(epoch)+"epoch.png")
@@ -164,12 +161,11 @@ def train():
 
 
             img_batch = test_img[test_ind[0:9],:,:,:]
-            slabel_batch =test_slabel[test_ind[0:9],:,:,:]
-            clabel_batch =test_clabel[test_ind[0:9],:,:,:]
-            image = combine_images(slabel_batch)
-            generated_img = gen.predict([slabel_batch,clabel_batch])
+            label_batch =test_label[test_ind[0:9],:,:,:]
+            image = combine_images(label_batch)
+            generated_img = gen.predict(label_batch)
 
-            image = combine_images(slabel_batch)
+            image = combine_images(label_batch)
             image = image.reshape(image.shape[0:2])
             image = image*128.0+128.0
             Image.fromarray(image.astype(np.uint8)).save(resultDir + "/vlabel_" + str(epoch)+"epoch.png")

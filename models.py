@@ -48,7 +48,9 @@ def discriminator():
     return model
 
 
-def generator():
+
+
+def generator_sonar():
 
     # encoder
     input1 = Input(shape=(512,256,1))
@@ -80,12 +82,48 @@ def generator():
     return(model)
 
 
-def GAN(generator, discriminator):
+def generator():
+
+    # encoder
+    input = Input(shape=(512,256,1))
+    enc_1 = Conv2D(filters=32, kernel_size=(3,3), strides=1, padding='same',input_shape=(512,256,1))(input)
+
+    enc_2 = CBR(64,(512,256,32))(enc_1)
+    enc_3 = CBR(128,(256,128,64))(enc_2)
+    enc_4 = CBR(256,(128,64,128))(enc_3)
+    enc_5 = CBR(512,(64,32,256))(enc_4)
+    enc_6 = CBR(512,(32,16,512))(enc_5)
+    enc_7 = CBR(512,(16,8,512))(enc_6)
+    enc_8 = CBR(512,(8,4,512))(enc_7)
+
+    # decoder
+    x = CBR(512,(4,2,512),sample='up',activation='relu',dropout=True)(enc_8)
+    x = CBR(512,(8,4,1024),sample='up',activation='relu',dropout=True)(concatenate([x,enc_7]))
+    x = CBR(512,(16,8,1024),sample='up',activation='relu',dropout=True)(concatenate([x,enc_6]))
+    x = CBR(256,(32,16,1024),sample='up',activation='relu',dropout=False)(concatenate([x,enc_5]))
+    x = CBR(128,(64,32,512),sample='up',activation='relu',dropout=False)(concatenate([x,enc_4]))
+    x = CBR(64,(128,64,256),sample='up',activation='relu',dropout=False)(concatenate([x,enc_3]))
+    x = CBR(32,(256,128,128),sample='up',activation='relu',dropout=False)(concatenate([x,enc_2]))
+    output = Conv2D(filters=3, kernel_size=(3,3),strides=1,padding="same")(concatenate([x,enc_1]))
+    model = Model(inputs=input, outputs=output)
+    return(model)
+
+
+def GAN_sonar(generator, discriminator):
 
     s_input = Input(shape=(512,256,1))
     c_input = Input(shape=(512,256,3))
     generated_image = generator([s_input,c_input])
     DCGAN_output = discriminator([s_input,generated_image])
     DCGAN = Model(inputs=[s_input,c_input],outputs=[generated_image, DCGAN_output],name="DCGAN")
+
+    return DCGAN
+
+
+def GAN(generator, discriminator):
+    input = Input(shape=(512,256,3))
+    generated_image = generator(input)
+    DCGAN_output = discriminator([input,generated_image])
+    DCGAN = Model(inputs=input,outputs=[generated_image, DCGAN_output],name="DCGAN")
 
     return DCGAN
