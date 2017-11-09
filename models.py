@@ -85,7 +85,7 @@ def generator_sonar():
 def generator():
 
     # encoder
-    input = Input(shape=(512,256,1))
+    input = Input(shape=(512,256,3))
     enc_1 = Conv2D(filters=32, kernel_size=(3,3), strides=1, padding='same',input_shape=(512,256,1))(input)
 
     enc_2 = CBR(64,(512,256,32))(enc_1)
