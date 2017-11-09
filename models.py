@@ -29,12 +29,30 @@ def CBR(ch,shape,bn=True,sample='down',activation=LeakyReLU, dropout=False):
 
 
 
-def discriminator():
+def discriminator_sonar():
     h = 512
     w = 256
     label_input = Input(shape=(h,w,1))
     gen_output = Input(shape=(h,w,3))
     x1 = CBR(32,(512,256,1), bn=False)(label_input)
+    x2 = CBR(32,(256,128,3),bn=False)(gen_output)
+    x = concatenate([x1,x2])
+    x = CBR(128,(128,64,64))(x)
+    x = CBR(256,(64,32,128))(x)
+    x = CBR(512,(32,16,256))(x)
+    x = Conv2D(filters=1,kernel_size=3,strides=1,padding='same')(x)
+    x = Activation('sigmoid')(x)
+    output = Lambda(lambda x: K.mean(x, axis=[1,2]),output_shape=(1,))(x)
+    model = Model(inputs =[label_input,gen_output], outputs = [output])
+
+    return model
+
+def discriminator():
+    h = 512
+    w = 256
+    label_input = Input(shape=(h,w,3))
+    gen_output = Input(shape=(h,w,3))
+    x1 = CBR(32,(512,256,3), bn=False)(label_input)
     x2 = CBR(32,(256,128,3),bn=False)(gen_output)
     x = concatenate([x1,x2])
     x = CBR(128,(128,64,64))(x)
@@ -85,8 +103,8 @@ def generator_sonar():
 def generator():
 
     # encoder
-    input = Input(shape=(512,256,1))
-    enc_1 = Conv2D(filters=32, kernel_size=(3,3), strides=1, padding='same',input_shape=(512,256,1))(input)
+    input = Input(shape=(512,256,3))
+    enc_1 = Conv2D(filters=32, kernel_size=(3,3), strides=1, padding='same',input_shape=(512,256,3))(input)
 
     enc_2 = CBR(64,(512,256,32))(enc_1)
     enc_3 = CBR(128,(256,128,64))(enc_2)
