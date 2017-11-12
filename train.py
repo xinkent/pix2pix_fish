@@ -10,6 +10,7 @@ import math
 import os
 import tensorflow as tf
 import argparse
+from tqdm import tqdm
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"
 config = tf.ConfigProto()
@@ -24,6 +25,7 @@ def train():
     parser.add_argument('--epoch', '-e', type=int, default = 500)
     parser.add_argument('--out', '-o',default = 'result')
     parser.add_argument('--lmd', '-l',type=int, default = 100)
+    parser.add_argument('--night', '-n',type=float, default = 25)
     args = parser.parse_args()
 
     def dis_entropy(y_true, y_pred):
@@ -45,6 +47,7 @@ def train():
     batch_size = args.batchsize
     nb_epoch = args.epoch
     lmd = args.lmd
+    night_level = args.night
 
     o = open(resultDir + "/log.txt","w")
     o.write("batch:" + str(batch_size) + "  lambda:" + str(lmd) + "\n")
@@ -54,9 +57,9 @@ def train():
     n = 1145
     # data_ind = np.random.permutation(n)
     data_ind = np.arange(n)
-    train_img, train_label = load_dataset(data_range=data_ind[:int(n*0.7)])
+    train_img, train_label = load_dataset(data_range=data_ind[:int(n*0.7)], night=night_level)
     # train_label = train_label[:,:,:,np.newaxis]
-    test_img,  test_label = load_dataset(data_range=data_ind[int(n*0.7):])
+    test_img,  test_label = load_dataset(data_range=data_ind[int(n*0.7):], night=night_level)
     # test_label = test_label[:,:,:,np.newaxis]
 
     # Create optimizers
@@ -84,11 +87,9 @@ def train():
     test_n = test_img.shape[0]
     print(train_n,test_n)
 
-    for epoch in range(nb_epoch):
+    for epoch in tqdm(range(nb_epoch)):
 
         o = open(resultDir + "/log.txt","a")
-        print("Epoch is ", epoch)
-        print("Number of batches", int(train_n/batch_size))
         ind = np.random.permutation(train_n)
         test_ind = np.random.permutation(test_n)
         dis_loss_list = []
@@ -145,7 +146,6 @@ def train():
             generated_img = gen.predict(label_batch)
 
             image = combine_images(label_batch)
-            image = image.reshape(image.shape[0:2])
             image = image*128.0+128.0
             Image.fromarray(image.astype(np.uint8)).save(resultDir + "/label_" + str(epoch)+"epoch.png")
 
@@ -166,7 +166,6 @@ def train():
             generated_img = gen.predict(label_batch)
 
             image = combine_images(label_batch)
-            image = image.reshape(image.shape[0:2])
             image = image*128.0+128.0
             Image.fromarray(image.astype(np.uint8)).save(resultDir + "/vlabel_" + str(epoch)+"epoch.png")
 

@@ -3,13 +3,14 @@ import keras.backend as K
 import numpy as np
 from keras.utils import generic_utils
 from keras.optimizers import Adam, SGD
-from models import discriminator, generator_sonar, GAN_sonar
+from models import discriminator_sonar, generator_sonar, GAN_sonar
 from fish_dataset import load_dataset2
 from PIL import Image
 import math
 import os
 import tensorflow as tf
 import argparse
+from tqdm import tqdm
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"
 config = tf.ConfigProto()
@@ -24,6 +25,7 @@ def train():
     parser.add_argument('--epoch', '-e', type=int, default = 500)
     parser.add_argument('--out', '-o',default = 'result')
     parser.add_argument('--lmd', '-l',type=int, default = 100)
+    parser.add_argument('--night', '-n', type=float, default=0.01)
     args = parser.parse_args()
 
     def dis_entropy(y_true, y_pred):
@@ -54,9 +56,9 @@ def train():
     n = 1145
     # data_ind = np.random.permutation(n)
     data_ind = np.arange(n)
-    train_img, train_slabel, train_clabel = load_dataset2(data_range=data_ind[:int(n*0.7)])
+    train_img, train_slabel, train_clabel = load_dataset2(data_range=data_ind[:int(n*0.7)], night=args.night)
     # train_label = train_label[:,:,:,np.newaxis]
-    test_img, test_slabel, test_clabel = load_dataset2(data_range=data_ind[int(n*0.7):])
+    test_img, test_slabel, test_clabel = load_dataset2(data_range=data_ind[int(n*0.7):], night=args.night)
     # test_label = test_label[:,:,:,np.newaxis]
 
     # Create optimizers
@@ -71,7 +73,7 @@ def train():
     gen = generator_sonar()
     gen.compile(loss = 'mae', optimizer=opt_generator)
 
-    dis = discriminator()
+    dis = discriminator_sonar()
     dis.trainable = False
 
     gan = GAN_sonar(gen,dis)
@@ -84,11 +86,9 @@ def train():
     test_n = test_img.shape[0]
     print(train_n,test_n)
 
-    for epoch in range(nb_epoch):
+    for epoch in tqdm(range(nb_epoch)):
 
         o = open(resultDir + "/log.txt","a")
-        print("Epoch is ", epoch)
-        print("Number of batches", int(train_n/batch_size))
         ind = np.random.permutation(train_n)
         test_ind = np.random.permutation(test_n)
         dis_loss_list = []
