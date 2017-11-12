@@ -53,10 +53,12 @@ def train():
 
     n = 1145
     # data_ind = np.random.permutation(n)
-    data_ind = np.arange(n)
-    train_img, train_slabel, train_clabel = load_dataset2(data_range=data_ind[:int(n*0.7)])
+
+    train_ind = np.concatenate([np.arange(1145)[:int(1145 * 0.7)],np.arange(1999,6748)[:int(4750*0.7)]])
+    test_ind = np.concatenate([np.arange(1145)[int(1145 * 0.7):],np.arange(1999,6748)[int(4750*0.7):]])
+    train_img, train_slabel, train_clabel = load_dataset2(data_range=train_ind)
     # train_label = train_label[:,:,:,np.newaxis]
-    test_img, test_slabel, test_clabel = load_dataset2(data_range=data_ind[int(n*0.7):])
+    test_img, test_slabel, test_clabel = load_dataset2(data_range=test_ind)
     # test_label = test_label[:,:,:,np.newaxis]
 
     # Create optimizers
