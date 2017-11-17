@@ -9,7 +9,14 @@ def load_dataset(dataDir='/data1/train_data/', data_range=range(0,300),skip=True
         print("     from: %s"%dataDir)
         imgDataset = []
         clabelDataset = []
+        excludes = np.concatenate([np.arange(227,254), np.arange(446,456), np.arange(797, 804), np.arange(2101,2118),
+        np.arange(2268, 2318), np.arnage(2765, 2836), np.arange(3010, 3030), np.arnage(3177, 3231),
+        np.arange(3468, 3491), np.arange(3666, 3736), np.arange(3928, 4002), np.arange(4307,4309),
+        np.arange(4417, 4477), np.arange(4738, 4742), np.arange(4847, 4907), np.arange(5407, 5465),
+        np.arange(5808, 5842), np.arange(6102, 6146)]) # training対象外
 
+        mask = [d not in excludes for d in data_range]
+        data_range = data_range[mask]
         imgStart = 1
         clabelStart = 1
 
@@ -50,6 +57,15 @@ def load_dataset2(dataDir='/data1/train_data/', data_range=range(0,300),skip=Tru
         imgDataset = []
         clabelDataset = []
         slabelDataset = []
+
+        excludes = np.concatenate([np.arange(227,254), np.arange(446,456), np.arange(797, 804), np.arange(2101,2118),
+        np.arange(2268, 2318), np.arnage(2765, 2836), np.arange(3010, 3030), np.arnage(3177, 3231),
+        np.arange(3468, 3491), np.arange(3666, 3736), np.arange(3928, 4002), np.arange(4307,4309),
+        np.arange(4417, 4477), np.arange(4738, 4742), np.arange(4847, 4907), np.arange(5407, 5465),
+        np.arange(5808, 5842), np.arange(6102, 6146)]) # training対象外
+
+        mask = [d not in excludes for d in data_range]
+        data_range = data_range[mask]
 
         imgStart = 1
         slabelStart = 1
