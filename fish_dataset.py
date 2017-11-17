@@ -4,7 +4,7 @@ from PIL import Image
 from io import BytesIO
 
 
-def load_dataset(dataDir='/data1/train_data1/', data_range=range(0,300),skip=True, night=10):
+def load_dataset(dataDir='/data1/train_data/', data_range=range(0,300),skip=True, night=10):
         print("load dataset start")
         print("     from: %s"%dataDir)
         imgDataset = []
@@ -44,7 +44,7 @@ def load_dataset(dataDir='/data1/train_data1/', data_range=range(0,300),skip=Tru
         return np.array(imgDataset),np.array(clabelDataset)
 
 
-def load_dataset2(dataDir='/data1/train_data1/', data_range=range(0,300),skip=True, night=10):
+def load_dataset2(dataDir='/data1/train_data/', data_range=range(0,300),skip=True, night=10):
         print("load dataset start")
         print("     from: %s"%dataDir)
         imgDataset = []
@@ -64,7 +64,7 @@ def load_dataset2(dataDir='/data1/train_data1/', data_range=range(0,300),skip=Tr
             clabelNum = clabelStart + i
             img = Image.open(dataDir + "up/up%05d.png"%imgNum)
             label_color = Image.open(dataDir + "up_" + str(night).replace('.','') + "night/night_up%05d.png"%clabelNum)
-            label_sonar = Image.open(dataDir + "sonar/" + "2017-03-02_105804_%d_width_773_height_1190.png"%slabelNum)
+            label_sonar = Image.open(dataDir + "sonar/sonar%05d.png"%slabelNum)
             label_sonar = label_sonar.convert("L")
 
             w,h = img.size
