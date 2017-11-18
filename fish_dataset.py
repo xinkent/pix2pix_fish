@@ -9,12 +9,12 @@ def load_dataset(dataDir='/data1/train_data/', data_range=range(0,300),skip=True
         print("     from: %s"%dataDir)
         imgDataset = []
         clabelDataset = []
-        excludes = np.concatenate([np.arange(227,254), np.arange(446,456), np.arange(797, 804), np.arange(2101,2118),
-        np.arange(2268, 2318), np.arnage(2765, 2836), np.arange(3010, 3030), np.arnage(3177, 3231),
-        np.arange(3468, 3491), np.arange(3666, 3736), np.arange(3928, 4002), np.arange(4307,4309),
-        np.arange(4417, 4477), np.arange(4738, 4742), np.arange(4847, 4907), np.arange(5407, 5465),
-        np.arange(5808, 5842), np.arange(6102, 6146)]) # training対象外
-
+        excludes = np.concatenate([np.arange(226,253), np.arange(445,455), np.arange(796, 803), np.arange(2100,2117),
+        np.arange(2267, 2317), np.arnage(2764, 2835), np.arange(3009, 3029), np.arnage(3176, 3230),
+        np.arange(3467, 3490), np.arange(3665, 3735), np.arange(3927, 4001), np.arange(4306,4308),
+        np.arange(4416, 4476), np.arange(4737, 4741), np.arange(4846, 4906), np.arange(5406, 5464),
+        np.arange(5807, 5841), np.arange(6101, 6145)]) # training対象外
+        
         mask = [d not in excludes for d in data_range]
         data_range = data_range[mask]
         imgStart = 1
@@ -58,11 +58,11 @@ def load_dataset2(dataDir='/data1/train_data/', data_range=range(0,300),skip=Tru
         clabelDataset = []
         slabelDataset = []
 
-        excludes = np.concatenate([np.arange(227,254), np.arange(446,456), np.arange(797, 804), np.arange(2101,2118),
-        np.arange(2268, 2318), np.arnage(2765, 2836), np.arange(3010, 3030), np.arnage(3177, 3231),
-        np.arange(3468, 3491), np.arange(3666, 3736), np.arange(3928, 4002), np.arange(4307,4309),
-        np.arange(4417, 4477), np.arange(4738, 4742), np.arange(4847, 4907), np.arange(5407, 5465),
-        np.arange(5808, 5842), np.arange(6102, 6146)]) # training対象外
+        excludes = np.concatenate([np.arange(226,253), np.arange(445,455), np.arange(796, 803), np.arange(2100,2117),
+        np.arange(2267, 2317), np.arnage(2764, 2835), np.arange(3009, 3029), np.arnage(3176, 3230),
+        np.arange(3467, 3490), np.arange(3665, 3735), np.arange(3927, 4001), np.arange(4306,4308),
+        np.arange(4416, 4476), np.arange(4737, 4741), np.arange(4846, 4906), np.arange(5406, 5464),
+        np.arange(5807, 5841), np.arange(6101, 6145)]) # training対象外
 
         mask = [d not in excludes for d in data_range]
         data_range = data_range[mask]
