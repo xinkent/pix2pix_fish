@@ -12,11 +12,11 @@ import tensorflow as tf
 import argparse
 from tqdm import tqdm
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"
-config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
-sess = tf.Session(config = config)
-K.set_session(sess)
+# os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"
+# config = tf.ConfigProto()
+# config.gpu_options.allow_growth = True
+# sess = tf.Session(config = config)
+# K.set_session(sess)
 
 def train():
     parser = argparse.ArgumentParser(description = "keras pix2pix")
@@ -26,7 +26,16 @@ def train():
     parser.add_argument('--out', '-o',default = 'result')
     parser.add_argument('--lmd', '-l',type=int, default = 100)
     parser.add_argument('--night', '-n',type=float, default = 25)
+    parser.add_argument('--gpu', '-g', type = int, default = 2)
     args = parser.parse_args()
+    
+    os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
+
+    config = tf.ConfigProto()
+    config.gpu_options.allow_growth = True
+    sess = tf.Session(config = config)
+    K.set_session(sess)
+
 
     def dis_entropy(y_true, y_pred):
         return -K.log(K.abs((y_pred - y_true)) + 1e-07)
