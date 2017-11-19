@@ -10,7 +10,6 @@ import math
 import os
 import tensorflow as tf
 import argparse
-from tqdm import tqdm
 from progressbar import ProgressBar
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"
@@ -95,7 +94,7 @@ def train():
     train_n = train_img.shape[0]
     test_n = test_img.shape[0]
     print(train_n,test_n)
-    
+
     p = ProgressBar()
     for epoch in p(range(nb_epoch)):
         p.update(epoch+1)

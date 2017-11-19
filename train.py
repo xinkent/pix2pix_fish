@@ -10,7 +10,7 @@ import math
 import os
 import tensorflow as tf
 import argparse
-from tqdm import tqdm
+from progressbar import ProgressBar
 
 # os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"
 # config = tf.ConfigProto()
@@ -28,7 +28,7 @@ def train():
     parser.add_argument('--night', '-n',type=float, default = 25)
     parser.add_argument('--gpu', '-g', type = int, default = 2)
     args = parser.parse_args()
-    
+
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
 
     config = tf.ConfigProto()
@@ -96,8 +96,8 @@ def train():
     test_n = test_img.shape[0]
     print(train_n,test_n)
 
-    for epoch in tqdm(range(nb_epoch)):
-
+    for epoch in p(range(nb_epoch)):
+        p.update(epoch+1)
         o = open(resultDir + "/log.txt","a")
         ind = np.random.permutation(train_n)
         test_ind = np.random.permutation(test_n)
