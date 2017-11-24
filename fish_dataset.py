@@ -26,7 +26,7 @@ def load_dataset(dataDir='/data1/train_data/', data_range=range(0,300),skip=True
             imgNum = imgStart + i
             clabelNum = clabelStart + i
             img = Image.open(dataDir + "up/up%05d.png"%imgNum)
-            label_color = Image.open(dataDir+ "night_20/" + "up_" + str(night).replace('.','') + "night/night_up%05d.png"%clabelNum)
+            label_color = Image.open(dataDir+ "night_100/" + "up_" + str(night).replace('.','') + "night/night_up%05d.png"%clabelNum)
 
             w,h = img.size
             r = 300/min(w,h)
@@ -77,7 +77,7 @@ def load_dataset2(dataDir='/data1/train_data/', data_range=range(0,300),skip=Tru
             slabelNum = slabelStart + i
             clabelNum = clabelStart + i
             img = Image.open(dataDir + "up/up%05d.png"%imgNum)
-            label_color = Image.open(dataDir + "night_20/" +"up_" + str(night).replace('.','') + "night/night_up%05d.png"%clabelNum)
+            label_color = Image.open(dataDir + "night_100/" +"up_" + str(night).replace('.','') + "night/night_up%05d.png"%clabelNum)
             label_sonar = Image.open(dataDir + "sonar/sonar%05d.png"%slabelNum)
             label_sonar = label_sonar.convert("L")
 
