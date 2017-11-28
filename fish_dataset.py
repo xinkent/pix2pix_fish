@@ -50,7 +50,7 @@ def load_dataset(dataDir='/data1/train_data/', data_range=range(0,300),skip=True
         return np.array(imgDataset),np.array(clabelDataset)
 
 
-def load_dataset2(dataDir='/data1/train_data/', data_range=range(0,300),skip=True, night=10):
+def load_dataset2(dataDir='/data1/train_data/', data_range=range(0,300),test=False, night=10):
         print("load dataset start")
         print("     from: %s"%dataDir)
         imgDataset = []
@@ -70,7 +70,7 @@ def load_dataset2(dataDir='/data1/train_data/', data_range=range(0,300),skip=Tru
         slabelStart = 1
         clabelStart = 1
         for i in data_range:
-            if skip:
+            if not test:
                 if i%3 != 0:
                     continue
             imgNum = imgStart + i
@@ -93,8 +93,12 @@ def load_dataset2(dataDir='/data1/train_data/', data_range=range(0,300),skip=Tru
             label_color = np.asarray(label_color)/128.0-1.0
 
             h,w,_ = img.shape
-            xl = np.random.randint(0,w-256)
-            yl = np.random.randint(0,h-512)
+            if test:
+                xl = int(w-256)
+                yl = int(h-512)
+            else:
+                xl = np.random.randint(0,w-256)
+                yl = np.random.randint(0,h-512)
             img = img[yl:yl+512, xl:xl+256, :]
             label_sonar = label_sonar[yl:yl+512, xl:xl+256,:]
             label_color = label_color[yl:yl+512, xl:xl+256,:]
