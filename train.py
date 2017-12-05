@@ -56,14 +56,16 @@ def train():
     o.close()
 
     # load data
-    ds1_first, ds1_last, num_ds1 = 1,    1145, 1145
-    ds2_first, ds2_last, num_ds2 = 2000, 6749, 4750
+    # ds1_first, ds1_last, num_ds1 = 1,    1145, 1145
+    # ds2_first, ds2_last, num_ds2 = 2000, 6749, 4750
+    ds1_first, ds1_last, num_ds1 = 1,    100, 100
+    ds2_first, ds2_last, num_ds2 = 101, 200, 100
     train_data_i = np.concatenate([np.arange(ds1_first,ds1_last+1)[:int(num_ds1 * 0.7)],
                                  np.arange(ds2_first,ds2_last+1)[:int(num_ds2*0.7)]])
     test_data_i  = np.concatenate([np.arange(ds1_first,ds1_last+1)[int(num_ds1 * 0.7):],
                                  np.arange(ds2_first,ds2_last+1)[int(num_ds2*0.7):]])
-    train_gt, _, train_night = load_dataset(data_range=train_data_i, night = args.dark)
-    test_gt,  _, test_night  = load_dataset(data_range=test_data_i,  night = args.dark)
+    train_gt, _, train_night = load_dataset(data_range=train_data_i, dark = args.dark)
+    test_gt,  _, test_night  = load_dataset(data_range=test_data_i,  dark = args.dark)
 
     # Create optimizers
     opt_Gan           = Adam(lr=1E-3)
@@ -78,25 +80,25 @@ def train():
 
 
     # make models
-    generator     = generator()
-    generator.compile(loss = 'mae', optimizer=opt_Generator)
+    Generator     = generator()
+    Generator.compile(loss = 'mae', optimizer=opt_Generator)
     Discriminator = discriminator()
     Discriminator.trainable = False
     Gan = GAN(Generator,Discriminator)
-    Gan.compile(loss = gan_loss, loss_weights = gan_loss_weights,optimizer = opt_gan)
+    Gan.compile(loss = gan_loss, loss_weights = gan_loss_weights,optimizer = opt_Gan)
     Discriminator.trainable = True
     Discriminator.compile(loss=dis_entropy, optimizer=opt_Discriminator)
 
     # start training
-    n_train = train_img.shape[0]
+    n_train = train_gt.shape[0]
     n_test = test_gt.shape[0]
-    print(train_n,test_n)
+    print(n_train, n_test)
     p = ProgressBar()
-    for epoch in p(range(nb_epoch)):
+    for epoch in p(range(epoch)):
         p.update(epoch+1)
         out_file = open(resultDir + "/log.txt","a")
-        train_ind = np.random.permutation(train_n)
-        test_ind  = np.random.permutation(test_n)
+        train_ind = np.random.permutation(n_train)
+        test_ind  = np.random.permutation(n_test)
         dis_losses = []
         gan_losses = []
         test_dis_losses = []
@@ -106,7 +108,7 @@ def train():
         y_gan  = np.array([1] * BATCH_SIZE)
 
         # training
-        for batch_i in range(int(train_n/BATCH_SIZE)):
+        for batch_i in range(int(n_train/BATCH_SIZE)):
             gt_batch        = train_gt[train_ind[(batch_i*BATCH_SIZE) : ((batch_i+1)*BATCH_SIZE)],:,:,:]
             night_batch     = train_night[train_ind[(batch_i*BATCH_SIZE) : ((batch_i+1)*BATCH_SIZE)],:,:,:]
             generated_batch = Generator.predict(night_batch)
@@ -140,7 +142,7 @@ def train():
         # visualize
         if epoch % 50 == 0 :
             # for training data
-            gt_batch        = train_img[train_ind[0:9],:,:,:]
+            gt_batch        = train_gt[train_ind[0:9],:,:,:]
             night_batch     = train_night[train_ind[0:9],:,:,:]
             generated_batch = Generator.predict(night_batch)
             save_images(night_batch,     resultDir + "/label_"     + str(epoch)+"epoch.png")
