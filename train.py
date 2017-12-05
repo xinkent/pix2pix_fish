@@ -20,7 +20,7 @@ def train():
     parser.add_argument('--epoch', '-e', type=int, default = 500)
     parser.add_argument('--out', '-o',default = 'result')
     parser.add_argument('--lmd', '-l',type=int, default = 100)
-    parser.add_argument('--night', '-n',type=float, default = 25)
+    parser.add_argument('--dark', '-d',type=float, default = 0.01)
     parser.add_argument('--gpu', '-g', type = int, default = 2)
     args = parser.parse_args()
     args = parser.parse_args()
@@ -62,8 +62,8 @@ def train():
                                  np.arange(ds2_first,ds2_last+1)[:int(num_ds2*0.7)]])
     test_data_i  = np.concatenate([np.arange(ds1_first,ds1_last+1)[int(num_ds1 * 0.7):],
                                  np.arange(ds2_first,ds2_last+1)[int(num_ds2*0.7):]])
-    train_gt, _, train_night = load_dataset(data_range=train_data_i, night = args.night)
-    test_gt,  _, test_night  = load_dataset(data_range=test_data_i,  night = args.night)
+    train_gt, _, train_night = load_dataset(data_range=train_data_i, night = args.dark)
+    test_gt,  _, test_night  = load_dataset(data_range=test_data_i,  night = args.dark)
 
     # Create optimizers
     opt_Gan           = Adam(lr=1E-3)
