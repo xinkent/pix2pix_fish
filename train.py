@@ -95,7 +95,7 @@ def train():
     train_n = train_img.shape[0]
     test_n = test_img.shape[0]
     print(train_n,test_n)
-
+    p = ProgressBar()
     for epoch in p(range(nb_epoch)):
         p.update(epoch+1)
         o = open(resultDir + "/log.txt","a")
