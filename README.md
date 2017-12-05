@@ -1,3 +1,7 @@
-# pix2pix_fish
+# sonar to real by pix2pix
 
-pix2pix : from sonar image to real image
+## USAGE
+### ソナーを使わないモデル
+python train.py -g [gpuの番号] -b [バッチサイズ] -e [エポック数] -o [出力ディレクトリ] -l [lambda] -d [暗さレベル]
+### ソナーを使うモデル
+python train_sonar.py -g [gpuの番号] -b [バッチサイズ] -e [エポック数] -o [出力ディレクトリ] -l [lambda] -d [暗さレベル]
