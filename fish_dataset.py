@@ -3,7 +3,7 @@ from PIL import Image
 from io import BytesIO
 
 
-def load_dataset(dataDir='/data1/train_data/', data_range=range(0,300),test=False, night=10):
+def load_dataset(dataDir='/data1/train_data/', data_range=range(0,300),test=False, dark=10):
         print("load dataset start")
         print("     from: %s"%dataDir)
         imgDataset    = []
