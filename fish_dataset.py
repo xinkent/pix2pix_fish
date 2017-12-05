@@ -1,45 +1,64 @@
 import numpy as np
 from PIL import Image
-
 from io import BytesIO
 
 
-def load_dataset(dataDir='./dataset/train_data/', data_range=range(0,300)):
+def load_dataset(dataDir='/data1/train_data/', data_range=range(0,300),test=False, dark=10):
         print("load dataset start")
         print("     from: %s"%dataDir)
-        imgDataset = []
-        labelDataset = []
+        imgDataset    = []
+        nightDataset = []
+        sonarDataset  = []
 
-        imgStart = 12313
-        labelStart = 1
+        # trainingに使えないデータ(エイがカメラの前を通った場面など)を除去
+        excludes = np.concatenate([np.arange(226,253), np.arange(445,455), np.arange(796, 803), np.arange(2100,2117),
+                                   np.arange(2267, 2317), np.arange(2764, 2835), np.arange(3009, 3029), np.arange(3176, 3230),
+                                   np.arange(3467, 3490), np.arange(3665, 3735), np.arange(3927, 4001), np.arange(4306,4308),
+                                   np.arange(4416, 4476), np.arange(4737, 4741), np.arange(4846, 4906), np.arange(5406, 5464),
+                                   np.arange(5807, 5841), np.arange(6101, 6145)]) # training対象外
+        mask = [d not in excludes for d in data_range]
+        data_range = data_range[mask]
+
+        imgStart   = 0
+        sonarStart = 0
+        nightStart = 0
         for i in data_range:
-            imgNum = imgStart + int(i*(29/10))
-            labelNum = i + 1
-            img = Image.open(dataDir + "GP029343_%06d.png"%imgNum)
-            label = Image.open(dataDir + "2017-03-02_105804_%d_width_773_height_1190.png"%labelNum)
-            label = label.convert("L")
+            if not test:
+                if i%3 != 0:
+                    continue
+            imgNum   = imgStart + i
+            sonarNum = sonarStart + i
+            nightNum = nightStart + i
+            img   = Image.open(dataDir + "up/up%05d.png"%imgNum)
+            night = Image.open(dataDir + "night_100/" +"up_" + str(dark).replace('.','') + "night/night_up%05d.png"%nightNum)
+            sonar = Image.open(dataDir + "sonar/sonar%05d.png"%sonarNum)
+            sonar = sonar.convert("L")
+
+            # 短い辺が300pixになるようにresizeし、rgbを(-1,1)に正規化
             w,h = img.size
-            r =  300/min(w,h)
-            img = img.resize((int(r*w), int(r*h)), Image.BILINEAR)
-            label = label.resize((int(r*w), int(r*h)),Image.BILINEAR)
+            r = 300/min(w,h)
+            img   = img.resize((int(r*w), int(r*h)), Image.BILINEAR)
+            night = night.resize((int(r*w), int(r*h)),Image.BILINEAR)
+            sonar = sonar.resize((int(r*w), int(r*h)),Image.BILINEAR)
+            img   = np.asarray(img)/128.0-1.0
+            sonar = (np.asarray(sonar)/128.0-1.0)[:,:,np.newaxis]
+            night = np.asarray(night)/128.0-1.0
+            # 512 * 256にランダムクリップ
+            h,w,_ = img.shape
+            if test:
+                xl = int(w-256)
+                yl = int(h-512)
+            else:
+                xl = np.random.randint(0,w-256)
+                yl = np.random.randint(0,h-512)
+            img = img[yl:yl+512, xl:xl+256, :]
+            sonar = sonar[yl:yl+512, xl:xl+256,:]
+            night = night[yl:yl+512, xl:xl+256,:]
 
-
-            img = np.asarray(img).astype("f")/128.0-1.0
-
-            label = np.asarray(label)/128.0-1.0
-            label = label[:,:,np.newaxis]
-
-            img_h,img_w,_ = img.shape
-            # label_h, label_w, _ = label.shape
-            xl = np.random.randint(0,img_w-256)
-            yl = np.random.randint(0,img_h-512)
-            # label_xl = np.random.randint(0,label_w-256)
-            # label_yl = np.random.randint(0,label_h-256)
-            img = img[yl:yl+512, xl:xl+256,:]
-            # label = label[label_yl:label_yl+256, label_xl:label_xl+256]
-            label = label[yl:yl+512, xl:xl+256,:]
             imgDataset.append(img)
-            labelDataset.append(label)
+            sonarDataset.append(sonar)
+            nightDataset.append(night)
+
 
         print("load dataset done")
-        return np.array(imgDataset),np.array(labelDataset)
+        return np.array(imgDataset),np.array(sonarDataset),np.array(nightDataset)
