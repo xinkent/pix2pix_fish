@@ -4,7 +4,7 @@ import numpy as np
 from keras.utils import generic_utils
 from keras.optimizers import Adam, SGD
 from models import discriminator_sonar, generator_sonar, GAN_sonar
-from fish_dataset import load_dataset2
+from fish_dataset import load_dataset
 from PIL import Image
 import math
 import os
@@ -57,8 +57,8 @@ def train():
                                  np.arange(ds2_first,ds2_last+1)[:int(num_ds2*0.7)]])
     test_data_i  = np.concatenate([np.arange(ds1_first,ds1_last+1)[int(num_ds1 * 0.7):],
                                  np.arange(ds2_first,ds2_last+1)[int(num_ds2*0.7):]])
-    train_gt, train_sonar, train_night = load_dataset2(data_range=train_data_i, dark = args.dark)
-    test_gt,  test_sonar,  test_night  = load_dataset2(data_range=test_data_i,  dark = args.dark)
+    train_gt, train_sonar, train_night = load_dataset(data_range=train_data_i, dark = args.dark)
+    test_gt,  test_sonar,  test_night  = load_dataset(data_range=test_data_i,  dark = args.dark)
 
     # Create optimizers
     opt_Gan           = Adam(lr=1E-3)
@@ -144,7 +144,7 @@ def train():
             night_batch     = train_night[train_ind[0:9],:,:,:]
             generated_batch = Generator.predict([sonar_batch,night_batch])
             save_images(sonar_batch,     resultDir + "/label_"     + str(epoch)+"epoch.png")
-            save_images(gt_batch,       resultDir + "/gt_"        + str(epoch)+"epoch.png")
+            save_images(gt_batch,        resultDir + "/gt_"        + str(epoch)+"epoch.png")
             save_images(generated_batch, resultDir + "/generated_" + str(epoch)+"epoch.png")
             # for validation data
             gt_batch        = test_gt[test_ind[0:9],:,:,:]
@@ -152,7 +152,7 @@ def train():
             night_batch     = test_night[test_ind[0:9],:,:,:]
             generated_batch = Generator.predict([sonar_batch,night_batch])
             save_images(sonar_batch,     resultDir + "/vlabel_"     + str(epoch)+"epoch.png")
-            save_images(gt_batch,       resultDir + "/vgt_"        + str(epoch)+"epoch.png")
+            save_images(gt_batch,        resultDir + "/vgt_"        + str(epoch)+"epoch.png")
             save_images(generated_batch, resultDir + "/vgenerated_" + str(epoch)+"epoch.png")
 
             Gan.save_weights(modelDir + 'gan_weights' + "_lambda" + str(lmd) + "_epoch"+ str(epoch) + '.h5')
