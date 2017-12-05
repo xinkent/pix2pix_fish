@@ -2,11 +2,12 @@ import numpy as np
 from PIL import Image
 from io import BytesIO
 
+
 def load_dataset(dataDir='/data1/train_data/', data_range=range(0,300),test=False, night=10):
         print("load dataset start")
         print("     from: %s"%dataDir)
         imgDataset    = []
-        nightlDataset = []
+        nightDataset = []
         sonarDataset  = []
 
         # trainingに使えないデータ(エイがカメラの前を通った場面など)を除去
@@ -28,20 +29,20 @@ def load_dataset(dataDir='/data1/train_data/', data_range=range(0,300),test=Fals
             imgNum   = imgStart + i
             sonarNum = sonarStart + i
             nightNum = nightStart + i
-            img 　= Image.open(dataDir + "up/up%05d.png"%imgNum)
-            night = Image.open(dataDir + "night_100/" +"up_" + str(night).replace('.','') + "night/night_up%05d.png"%nightNum)
+            img   = Image.open(dataDir + "up/up%05d.png"%imgNum)
+            night = Image.open(dataDir + "night_100/" +"up_" + str(dark).replace('.','') + "night/night_up%05d.png"%nightNum)
             sonar = Image.open(dataDir + "sonar/sonar%05d.png"%sonarNum)
             sonar = sonar.convert("L")
 
-　　　　　　　# 短い辺が300pixになるようにresizeし、rgbを(-1,1)に正規化
+            # 短い辺が300pixになるようにresizeし、rgbを(-1,1)に正規化
             w,h = img.size
             r = 300/min(w,h)
             img   = img.resize((int(r*w), int(r*h)), Image.BILINEAR)
             night = night.resize((int(r*w), int(r*h)),Image.BILINEAR)
             sonar = sonar.resize((int(r*w), int(r*h)),Image.BILINEAR)
             img   = np.asarray(img)/128.0-1.0
-            sonar = (np.asarray(label_sonar)/128.0-1.0)[:,:,np.newaxis]
-            night = np.asarray(label_color)/128.0-1.0
+            sonar = (np.asarray(sonar)/128.0-1.0)[:,:,np.newaxis]
+            night = np.asarray(night)/128.0-1.0
             # 512 * 256にランダムクリップ
             h,w,_ = img.shape
             if test:
