@@ -12,11 +12,6 @@ import tensorflow as tf
 import argparse
 from progressbar import ProgressBar
 
-# os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"
-# config = tf.ConfigProto()
-# config.gpu_options.allow_growth = True
-# sess = tf.Session(config = config)
-# K.set_session(sess)
 
 def train():
     parser = argparse.ArgumentParser(description = "keras pix2pix")
@@ -28,184 +23,163 @@ def train():
     parser.add_argument('--night', '-n',type=float, default = 25)
     parser.add_argument('--gpu', '-g', type = int, default = 2)
     args = parser.parse_args()
+    args = parser.parse_args()
+    PATCH_SIZE = args.patchsize
+    BATCH_SIZE = args.batchsize
+    epoch      = args.epoch
+    lmd        = args.lmd
 
+    # set gpu environment
     os.environ["CUDA_VISIBLE_DEVICES"] = str(args.gpu)
-
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     sess = tf.Session(config = config)
     K.set_session(sess)
 
 
-    def dis_entropy(y_true, y_pred):
-        return -K.log(K.abs((y_pred - y_true)) + 1e-07)
 
+
+    # make directory to save results
     if not os.path.exists("./result"):
         os.mkdir("./result")
-
-    # resultDir = "./result/" + "patch" + str(patch_size)
     resultDir = "./result/" + args.out
+    modelDir  = resultDir + "/model/"
     if not os.path.exists(resultDir):
         os.mkdir(resultDir)
-
-    modelDir = resultDir + "/model/"
     if not os.path.exists(modelDir):
         os.mkdir(modelDir)
 
-    patch_size = args.patchsize
-    batch_size = args.batchsize
-    nb_epoch = args.epoch
-    lmd = args.lmd
-    night_level = args.night
-
+    # make a logfile and add colnames
     o = open(resultDir + "/log.txt","w")
-    o.write("batch:" + str(batch_size) + "  lambda:" + str(lmd) + "\n")
-    o.write("epoch,dis_loss,gan_mae,gan_entropy,vgan_mae,vgan_entropy" + "\n")
+    o.write("batch:" + str(BATCH_SIZE) + "  lambda:" + str(lmd) + "\n")
+    o.write("epoch,dis_loss,gan_mae,gan_entropy,vdis_loss,vgan_mae,vgan_entropy" + "\n")
     o.close()
 
-    n = 1145
-    train_ind = np.concatenate([np.arange(1145)[:int(1145 * 0.7)],np.arange(1999,6748)[:int(4750*0.7)]])
-    test_ind = np.concatenate([np.arange(1145)[int(1145 * 0.7):],np.arange(1999,6748)[int(4750*0.7):]])
-    train_img, train_label = load_dataset(data_range=train_ind,night = args.night)
-    # train_label = train_label[:,:,:,np.newaxis]
-    test_img, test_label = load_dataset(data_range=test_ind,night = args.night)
-    # test_label = test_label[:,:,:,np.newaxis]
+    # load data
+    ds1_first, ds1_last, num_ds1 = 1,    1145, 1145
+    ds2_first, ds2_last, num_ds2 = 2000, 6749, 4750
+    train_data_i = np.concatenate([np.arange(num_ds1)[:int(num_ds1 * 0.7)],
+                                 np.arange(ds2_first,ds2_last+1)[:int(num_ds2*0.7)]])
+    test_data_i  = np.concatenate([np.arange(num_ds1)[int(num_ds1 * 0.7):],
+                                 np.arange(ds2_first,ds2_last+1)[int(num_ds2*0.7):]])
+    train_gt, _, train_night = load_dataset(data_range=train_data_i, night = args.night)
+    test_gt,  _, test_night  = load_dataset(data_range=test_data_i,  night = args.night)
 
     # Create optimizers
-    opt_gan = Adam(lr=1E-3)
-    # opt_discriminator = SGD(lr=1E-3, momentum=0.9, nesterov=True)
-    opt_discriminator = Adam(lr=1E-3)
-    opt_generator = Adam(lr=1E-3)
+    opt_Gan           = Adam(lr=1E-3)
+    opt_Discriminator = Adam(lr=1E-3)
+    opt_Generator     = Adam(lr=1E-3)
 
+    # set the loss of gan
+    def dis_entropy(y_true, y_pred):
+        return -K.log(K.abs((y_pred - y_true)) + 1e-07)
     gan_loss = ['mae', dis_entropy]
     gan_loss_weights = [lmd,1]
 
-    gen = generator()
-    gen.compile(loss = 'mae', optimizer=opt_generator)
 
-    dis = discriminator()
-    dis.trainable = False
+    # make models
+    generator     = generator()
+    generator.compile(loss = 'mae', optimizer=opt_Generator)
+    Discriminator = discriminator()
+    Discriminator.trainable = False
+    Gan = GAN(Generator,Discriminator)
+    Gan.compile(loss = gan_loss, loss_weights = gan_loss_weights,optimizer = opt_gan)
+    Discriminator.trainable = True
+    Discriminator.compile(loss=dis_entropy, optimizer=opt_Discriminator)
 
-    gan = GAN(gen,dis)
-    gan.compile(loss = gan_loss, loss_weights = gan_loss_weights,optimizer = opt_gan)
-
-    dis.trainable = True
-    dis.compile(loss=dis_entropy, optimizer=opt_discriminator)
-
-    train_n = train_img.shape[0]
-    test_n = test_img.shape[0]
+    # start training
+    n_train = train_img.shape[0]
+    n_test = test_gt.shape[0]
     print(train_n,test_n)
     p = ProgressBar()
     for epoch in p(range(nb_epoch)):
         p.update(epoch+1)
-        o = open(resultDir + "/log.txt","a")
-        ind = np.random.permutation(train_n)
-        test_ind = np.random.permutation(test_n)
-        dis_loss_list = []
-        gan_loss_list = []
-        test_dis_loss_list = []
-        test_gan_loss_list = []
+        out_file = open(resultDir + "/log.txt","a")
+        train_ind = np.random.permutation(train_n)
+        test_ind  = np.random.permutation(test_n)
+        dis_losses = []
+        gan_losses = []
+        test_dis_losses = []
+        test_gan_losses = []
+        y_real = np.array([1] * BATCH_SIZE)
+        y_fake = np.array([0] * BATCH_SIZE)
+        y_gan  = np.array([1] * BATCH_SIZE)
 
         # training
-        for index in range(int(train_n/batch_size)):
-            img_batch = train_img[ind[(index*batch_size) : ((index+1)*batch_size)],:,:,:]
-            label_batch =train_label[ind[(index*batch_size) : ((index+1)*batch_size)],:,:,:]
-            generated_img = gen.predict(label_batch)
-
-            y_real = np.array([1] * batch_size)
-            y_fake = np.array([0] * batch_size)
-            d_real_loss = np.array(dis.train_on_batch([label_batch,img_batch],y_real))
-            d_fake_loss =np.array(dis.train_on_batch([label_batch,generated_img],y_fake))
-            d_loss = d_real_loss + d_fake_loss
-            dis_loss_list.append(d_loss)
-            gan_y = np.array([1] * batch_size)
-            g_loss = np.array(gan.train_on_batch(label_batch, [img_batch, gan_y]))
-            gan_loss_list.append(g_loss)
-        dis_loss = np.mean(np.array(dis_loss_list))
-        gan_loss = np.mean(np.array(gan_loss_list), axis=0)
+        for batch_i in range(int(train_n/BATCH_SIZE)):
+            gt_batch        = train_gt[train_ind[(batch_i*BATCH_SIZE) : ((batch_i+1)*BATCH_SIZE)],:,:,:]
+            night_batch     = train_night[train_ind[(batch_i*BATCH_SIZE) : ((batch_i+1)*BATCH_SIZE)],:,:,:]
+            generated_batch = Generator.predict(night_batch)
+            # train Discriminator
+            dis_real_loss = np.array(Discriminator.train_on_batch([night_batch,gt_batch],y_real))
+            dis_fake_loss = np.array(Discriminator.train_on_batch([night_batch,generated_batch],y_fake))
+            dis_loss_batch = (dis_real_loss + dis_fake_loss) / 2
+            dis_losses.append(dis_loss_batch)
+            gan_loss_batch = np.array(Gan.train_on_batch(night_batch, [gt_batch, y_gan]))
+            gan_losses.append(gan_loss_batch)
+        dis_loss = np.mean(np.array(dis_losses))
+        gan_loss = np.mean(np.array(gan_losses), axis=0)
 
         # validation
-        for index in range(int(test_n/batch_size)):
-            img_batch = test_img[test_ind[(index*batch_size) : ((index+1)*batch_size)],:,:,:]
-            label_batch =test_label[test_ind[(index*batch_size) : ((index+1)*batch_size)],:,:,:]
-            generated_img = gen.predict(label_batch)
-
-            y_real = np.array([1] * batch_size)
-            y_fake = np.array([0] * batch_size)
-            d_real_loss = np.array(dis.test_on_batch([label_batch,img_batch],y_real))
-            d_fake_loss =np.array(dis.test_on_batch([label_batch,generated_img],y_fake))
-            d_loss = d_real_loss + d_fake_loss
-            test_dis_loss_list.append(d_loss)
-            gan_y = np.array([1] * batch_size)
-            g_loss = np.array(gan.test_on_batch(label_batch, [img_batch, gan_y]))
-            test_gan_loss_list.append(g_loss)
-        test_dis_loss = np.mean(np.array(test_dis_loss_list))
-        test_gan_loss = np.mean(np.array(test_gan_loss_list), axis=0)
-
-        o.write(str(epoch) + "," + str(dis_loss) + "," + str(gan_loss[1]) + "," + str(gan_loss[2]) + "," + str(test_dis_loss) + ","+ str(test_gan_loss[1]) +"," + str(test_gan_loss[2]) + "\n")
-
-
+        for batch_i in range(int(n_test/BATCH_SIZE)):
+            gt_batch        = test_gt[test_ind[(batch_i*BATCH_SIZE) : ((batch_i+1)*BATCH_SIZE)],:,:,:]
+            night_batch     = test_night[test_ind[(batch_i*BATCH_SIZE) : ((batch_i+1)*BATCH_SIZE)],:,:,:]
+            generated_batch = Generator.predict(night_batch)
+            # train Discriminator
+            dis_real_loss = np.array(Discriminator.test_on_batch([night_batch,gt_batch],y_real))
+            dis_fake_loss = np.array(Discriminator.test_on_batch([night_batch,generated_batch],y_fake))
+            test_dis_loss_batch = (dis_real_loss + dis_fake_loss) / 2
+            test_dis_losses.append(test_dis_loss_batch)
+            test_gan_loss_batch = np.array(Gan.test_on_batch(night_batch, [gt_batch, y_gan]))
+            test_gan_losses.append(test_gan_loss_batch)
+        test_dis_loss = np.mean(np.array(test_dis_losses))
+        test_gan_loss = np.mean(np.array(gan_losses), axis=0)
+        # write log of leaning
+        out_file.write(str(epoch) + "," + str(dis_loss) + "," + str(gan_loss[1]) + "," + str(gan_loss[2]) + "," + str(test_dis_loss) + ","+ str(test_gan_loss[1]) +"," + str(test_gan_loss[2]) + "\n")
 
         # visualize
         if epoch % 50 == 0 :
-            img_batch = train_img[ind[0:9],:,:,:]
-            label_batch =train_label[ind[0:9],:,:,:]
+            # for training data
+            gt_batch        = train_img[train_ind[0:9],:,:,:]
+            night_batch     = train_night[train_ind[0:9],:,:,:]
+            generated_batch = Generator.predict(night_batch)
+            save_images(night_batch,     resultDir + "/label_"     + str(epoch)+"epoch.png")
+            save_images(gt_batch,        resultDir + "/gt_"        + str(epoch)+"epoch.png")
+            save_images(generated_batch, resultDir + "/generated_" + str(epoch)+"epoch.png")
+            # for validation data
+            gt_batch        = test_gt[test_ind[0:9],:,:,:]
+            night_batch     = test_night[test_ind[0:9],:,:,:]
+            generated_batch = Generator.predict(night_batch)
+            save_images(night_batch,     resultDir + "/vlabel_"     + str(epoch)+"epoch.png")
+            save_images(gt_batch,        resultDir + "/vgt_"        + str(epoch)+"epoch.png")
+            save_images(generated_batch, resultDir + "/vgenerated_" + str(epoch)+"epoch.png")
 
-            image = combine_images(label_batch)
-            generated_img = gen.predict(label_batch)
+            Gan.save_weights(modelDir + 'gan_weights' + "_lambda" + str(lmd) + "_epoch"+ str(epoch) + '.h5')
 
-            image = combine_images(label_batch)
-            image = image*128.0+128.0
-            Image.fromarray(image.astype(np.uint8)).save(resultDir + "/label_" + str(epoch)+"epoch.png")
-
-            image = combine_images(img_batch)
-            image = image*128.0+128.0
-            Image.fromarray(image.astype(np.uint8)).save(resultDir + "/gt_" + str(epoch)+"epoch.png")
-
-
-
-            image = combine_images(generated_img)
-            image = image*128.0+128.0
-            Image.fromarray(image.astype(np.uint8)).save(resultDir + "/generated_" + str(epoch)+"epoch.png")
-
-
-            img_batch = test_img[test_ind[0:9],:,:,:]
-            label_batch =test_label[test_ind[0:9],:,:,:]
-            image = combine_images(label_batch)
-            generated_img = gen.predict(label_batch)
-
-            image = combine_images(label_batch)
-            image = image*128.0+128.0
-            Image.fromarray(image.astype(np.uint8)).save(resultDir + "/vlabel_" + str(epoch)+"epoch.png")
-
-            image = combine_images(img_batch)
-            image = image*128.0+128.0
-            Image.fromarray(image.astype(np.uint8)).save(resultDir + "/vgt_" + str(epoch)+"epoch.png")
-
-            image = combine_images(generated_img)
-            image = image*128.0+128.0
-            Image.fromarray(image.astype(np.uint8)).save(resultDir + "/vgenerated_" + str(epoch)+"epoch.png")
-
-            gan.save_weights(modelDir + 'gan_weights' + "_lambda" + str(lmd) + "_epoch"+ str(epoch) + '.h5')
-
-        o.close()
-    o.close()
+        out_file.close()
+    out_file.close()
     # gan.save("gan_" + "patch" + str(patch_size) + ".h5")
 
+def save_images(imgs, out_file_name):
+    combined_img = combine_images(imgs)
+    if combined_img.shape[2] == 1:
+        combined_img = combined_img.reshape(combined_img.shape[0:2])
+    combined_rgb_img = combined_img*128.0+128.0
+    Image.fromarray(combined_rgb_img.astype(np.uint8)).save(out_file_name)
 
-def combine_images(generated_images):
-    num = generated_images.shape[0]
-    width = int(math.sqrt(num))
+# バッチ画像を並べて1つにする
+# shapeが(9,10,10,3)から(1,30,30,3)になる。
+def combine_images(imgs):
+    num    = imgs.shape[0]
+    width  = int(math.sqrt(num))
     height = int(math.ceil(float(num)/width))
-    ch = generated_images.shape[3]
-    shape = generated_images.shape[1:3]
-    image = np.zeros((height*shape[0], width*shape[1],ch),
-                     dtype=generated_images.dtype)
-    for index, img in enumerate(generated_images):
+    ch     = imgs.shape[3]
+    shape  = imgs.shape[1:3]
+    image  = np.zeros((height*shape[0], width*shape[1],ch),dtype=imgs.dtype)
+    for index, img in enumerate(imgs):
         i = int(index/width)
         j = index % width
-        image[i*shape[0]:(i+1)*shape[0], j*shape[1]:(j+1)*shape[1],:] = \
-            img[:, :, :]
+        image[i*shape[0]:(i+1)*shape[0], j*shape[1]:(j+1)*shape[1],:] = img[:, :, :]
     return image
 
 if __name__ == '__main__':
