@@ -62,8 +62,8 @@ def train():
                                  np.arange(ds2_first,ds2_last+1)[:int(num_ds2*0.7)]])
     test_data_i  = np.concatenate([np.arange(ds1_first,ds1_last+1)[int(num_ds1 * 0.7):],
                                  np.arange(ds2_first,ds2_last+1)[int(num_ds2*0.7):]])
-    train_gt, _, train_night = load_dataset(data_range=train_data_i, night = args.dark)
-    test_gt,  _, test_night  = load_dataset(data_range=test_data_i,  night = args.dark)
+    train_gt, _, train_night = load_dataset(data_range=train_data_i, dark = args.dark)
+    test_gt,  _, test_night  = load_dataset(data_range=test_data_i,  dark = args.dark)
 
     # Create optimizers
     opt_Gan           = Adam(lr=1E-3)
