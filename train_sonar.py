@@ -19,7 +19,7 @@ def train():
     parser.add_argument('--epoch', '-e', type=int, default = 500)
     parser.add_argument('--out', '-o',default = 'result')
     parser.add_argument('--lmd', '-l',type=int, default = 100)
-    parser.add_argument('--night', '-n', type=float, default=0.01)
+    parser.add_argument('--dark', '-d', type=float, default=0.01)
     parser.add_argument('--gpu', '-g', type=int, default=2)
     args = parser.parse_args()
     PATCH_SIZE = args.patchsize
@@ -53,12 +53,12 @@ def train():
     # load data
     ds1_first, ds1_last, num_ds1 = 1,    1145, 1145
     ds2_first, ds2_last, num_ds2 = 2000, 6749, 4750
-    train_data_i = np.concatenate([np.arange(num_ds1)[:int(num_ds1 * 0.7)],
+    train_data_i = np.concatenate([np.arange(ds1_first,ds1_last+1)[:int(num_ds1 * 0.7)],
                                  np.arange(ds2_first,ds2_last+1)[:int(num_ds2*0.7)]])
-    test_data_i  = np.concatenate([np.arange(num_ds1)[int(num_ds1 * 0.7):],
+    test_data_i  = np.concatenate([np.arange(ds1_first,ds1_last+1)[int(num_ds1 * 0.7):],
                                  np.arange(ds2_first,ds2_last+1)[int(num_ds2*0.7):]])
-    train_gt, train_sonar, train_night = load_dataset2(data_range=train_data_i, night = args.night)
-    test_gt,  test_sonar,  test_night  = load_dataset2(data_range=test_data_i,  night = args.night)
+    train_gt, train_sonar, train_night = load_dataset2(data_range=train_data_i, dark = args.dark)
+    test_gt,  test_sonar,  test_night  = load_dataset2(data_range=test_data_i,  dark = args.dark)
 
     # Create optimizers
     opt_Gan           = Adam(lr=1E-3)
@@ -73,12 +73,12 @@ def train():
     gan_loss_weights = [lmd,1]
 
     # make models
-    generator     = generator_sonar()
-    generator.compile(loss = 'mae', optimizer=opt_Generator)
+    Generator     = generator_sonar()
+    Generator.compile(loss = 'mae', optimizer=opt_Generator)
     Discriminator = discriminator_sonar()
     Discriminator.trainable = False
     Gan = GAN_sonar(Generator,Discriminator)
-    Gan.compile(loss = gan_loss, loss_weights = gan_loss_weights,optimizer = opt_gan)
+    Gan.compile(loss = gan_loss, loss_weights = gan_loss_weights,optimizer = opt_Gan)
     Discriminator.trainable = True
     Discriminator.compile(loss=dis_entropy, optimizer=opt_Discriminator)
 
@@ -102,18 +102,18 @@ def train():
 
         # training
         for batch_i in range(int(n_train/BATCH_SIZE)):
-            gt_batch        = train_gt[train_i[(batch_i*BATCH_SIZE) : ((batch_i+1)*BATCH_SIZE)],:,:,:]
+            gt_batch        = train_gt[train_ind[(batch_i*BATCH_SIZE) : ((batch_i+1)*BATCH_SIZE)],:,:,:]
             sonar_batch     = train_sonar[train_ind[(batch_i*BATCH_SIZE) : ((batch_i+1)*BATCH_SIZE)],:,:,:]
             night_batch     = train_night[train_ind[(batch_i*BATCH_SIZE) : ((batch_i+1)*BATCH_SIZE)],:,:,:]
             generated_batch = Generator.predict([sonar_batch,night_batch])
             # train Discriminator
             dis_real_loss = np.array(Discriminator.train_on_batch([sonar_batch,gt_batch],y_real))
             dis_fake_loss = np.array(Discriminator.train_on_batch([sonar_batch,generated_batch],y_fake))
-            dis_loss      = (dis_real_loss + dis_fake_loss) / 2
-            dis_losses.append(dis_loss)
+            dis_loss_batch     = (dis_real_loss + dis_fake_loss) / 2
+            dis_losses.append(dis_loss_batch)
             # train Generator
-            gan_loss = np.array(Gan.train_on_batch([sonar_batch,night_batch], [gt_batch, y_gan]))
-            gan_losses.append(gan_loss)
+            gan_loss_batch = np.array(Gan.train_on_batch([sonar_batch,night_batch], [gt_batch, y_gan]))
+            gan_losses.append(gan_loss_batch)
         dis_loss = np.mean(np.array(dis_losses))
         gan_loss = np.mean(np.array(gan_losses), axis=0)
 
@@ -126,16 +126,15 @@ def train():
             # train Discriminator
             dis_real_loss = np.array(Discriminator.test_on_batch([sonar_batch,gt_batch],y_real))
             dis_fake_loss = np.array(Discriminator.test_on_batch([sonar_batch,generated_batch],y_fake))
-            dis_loss      = (dis_real_loss + dis_fake_loss) / 2
-            test_dis_losses.append(dis_loss)
+            test_dis_loss_batch      = (dis_real_loss + dis_fake_loss) / 2
+            test_dis_losses.append(test_dis_loss_batch)
             # train Generator
-            gan_loss = np.array(Gan.test_on_batch([sonar_batch,night_batch], [gt_batch, gan_y]))
-            test_gan_losses.append(gan_loss)
+            test_gan_loss_batch = np.array(Gan.test_on_batch([sonar_batch,night_batch], [gt_batch, y_gan]))
+            test_gan_losses.append(test_gan_loss_batch)
         test_dis_loss = np.mean(np.array(test_dis_losses))
         test_gan_loss = np.mean(np.array(test_gan_losses), axis=0)
         # write log of leaning
-        out_file.write(str(epoch) + "," + str(dis_loss) + "," + str(gan_loss[1]) + "," + str(gan_loss[2])
-                        + "," + str(test_dis_loss) + ","+ str(test_gan_loss[1]) +"," + str(test_gan_loss[2]) + "\n")
+        out_file.write(str(epoch) + "," + str(dis_loss) + "," + str(gan_loss[1]) + "," + str(gan_loss[2]) + "," + str(test_dis_loss) + ","+ str(test_gan_loss[1]) +"," + str(test_gan_loss[2]) + "\n")
 
         # visualize
         if epoch % 50 == 0 :
@@ -145,7 +144,7 @@ def train():
             night_batch     = train_night[train_ind[0:9],:,:,:]
             generated_batch = Generator.predict([sonar_batch,night_batch])
             save_images(sonar_batch,     resultDir + "/label_"     + str(epoch)+"epoch.png")
-            save_images(gt_batcdh,       resultDir + "/gt_"        + str(epoch)+"epoch.png")
+            save_images(gt_batch,       resultDir + "/gt_"        + str(epoch)+"epoch.png")
             save_images(generated_batch, resultDir + "/generated_" + str(epoch)+"epoch.png")
             # for validation data
             gt_batch        = test_gt[test_ind[0:9],:,:,:]
@@ -153,7 +152,7 @@ def train():
             night_batch     = test_night[test_ind[0:9],:,:,:]
             generated_batch = Generator.predict([sonar_batch,night_batch])
             save_images(sonar_batch,     resultDir + "/vlabel_"     + str(epoch)+"epoch.png")
-            save_images(gt_batcdh,       resultDir + "/vgt_"        + str(epoch)+"epoch.png")
+            save_images(gt_batch,       resultDir + "/vgt_"        + str(epoch)+"epoch.png")
             save_images(generated_batch, resultDir + "/vgenerated_" + str(epoch)+"epoch.png")
 
             Gan.save_weights(modelDir + 'gan_weights' + "_lambda" + str(lmd) + "_epoch"+ str(epoch) + '.h5')
@@ -163,7 +162,7 @@ def train():
 
 def save_images(imgs, out_file_name):
     combined_img = combine_images(imgs)
-    if combined_img.shape[2] = 1:
+    if combined_img.shape[2] == 1:
         combined_img = combined_img.reshape(combined_img.shape[0:2])
     combined_rgb_img = combined_img*128.0+128.0
     Image.fromarray(combined_rgb_img.astype(np.uint8)).save(out_file_name)
