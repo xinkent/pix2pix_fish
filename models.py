@@ -145,3 +145,64 @@ def GAN(generator, discriminator):
     DCGAN = Model(inputs=input,outputs=[generated_image, DCGAN_output],name="DCGAN")
 
     return DCGAN
+
+
+
+# 改良版U-net
+def generator2_sonar():
+
+    # encoder
+    input1 = Input(shape=(512,256,1))
+    enc_1 = Conv2D(filters=16,kernel_size=(3,3), strides=1, padding='same', input_shape=(512,256,1))(input1)
+
+    input2 = Input(shape=(512,256,3))
+    enc_2 = enc_1 = Conv2D(filters=16, kernel_size=(3,3), strides = 1, padding = 'same', input_shape=(512,256,3))(input2)
+    enc_3 = concatenate([enc_1,enc_2])
+
+    enc_4 = CBR(64,(512,256,32))(enc_3)
+    enc_5 = CBR(128,(256,128,64))(enc_4)
+    enc_6 = CBR(256,(128,64,128))(enc_5)
+    enc_7 = CBR(512,(64,32,256))(enc_6)
+    enc_8 = CBR(512,(32,16,512))(enc_7)
+    enc_9 = CBR(512,(16,8,512))(enc_8)
+    enc_10 = CBR(512,(8,4,512))(enc_9)
+
+    # decoder
+    x = CBR(512,(4,2,512),sample='up',activation='relu',dropout=True)(enc_10)
+    x = CBR(512,(8,4,1024),sample='up',activation='relu',dropout=True)(concatenate([x,enc_9]))
+    x = CBR(512,(16,8,1024),sample='up',activation='relu',dropout=True)(concatenate([x,enc_8]))
+    x = CBR(256,(32,16,1024),sample='up',activation='relu',dropout=False)(concatenate([x,enc_7]))
+    x = CBR(128,(64,32,512),sample='up',activation='relu',dropout=False)(concatenate([x,enc_6]))
+    x = CBR(64,(128,64,128),sample='up',activation='relu',dropout=False)(x)
+    x = CBR(32,(256,128,64),sample='up',activation='relu',dropout=False)(x)
+    output = Conv2D(filters=3, kernel_size=(3,3),strides=1,padding="same")(x)
+    model = Model(inputs=[input1,input2], outputs=output)
+    return(model)
+
+
+def generator2():
+
+    # encoder
+    input = Input(shape=(512,256,3))
+    enc_1 = Conv2D(filters=32, kernel_size=(3,3), strides=1, padding='same',input_shape=(512,256,3))(input)
+
+    enc_2 = CBR(64,(512,256,32))(enc_1)
+    enc_3 = CBR(128,(256,128,64))(enc_2)
+    enc_4 = CBR(256,(128,64,128))(enc_3)
+    enc_5 = CBR(512,(64,32,256))(enc_4)
+    enc_6 = CBR(512,(32,16,512))(enc_5)
+    enc_7 = CBR(512,(16,8,512))(enc_6)
+    enc_8 = CBR(512,(8,4,512))(enc_7)
+
+    # decoder
+    x = CBR(512,(4,2,512),sample='up',activation='relu',dropout=True)(enc_8)
+    x = CBR(512,(8,4,1024),sample='up',activation='relu',dropout=True)(concatenate([x,enc_7]))
+    x = CBR(512,(16,8,1024),sample='up',activation='relu',dropout=True)(concatenate([x,enc_6]))
+    x = CBR(256,(32,16,1024),sample='up',activation='relu',dropout=False)(concatenate([x,enc_5]))
+    x = CBR(128,(64,32,512),sample='up',activation='relu',dropout=False)(concatenate([x,enc_4]))
+    x = CBR(64,(128,64,128),sample='up',activation='relu',dropout=False)(x)
+    x = CBR(32,(256,128,64),sample='up',activation='relu',dropout=False)(x)
+    output = Conv2D(filters=3, kernel_size=(3,3),strides=1,padding="same")(x)
+    model = Model(inputs=input, outputs=output)
+    return(model)
+
