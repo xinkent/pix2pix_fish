@@ -156,7 +156,7 @@ def generator2_sonar():
     enc_1 = Conv2D(filters=16,kernel_size=(3,3), strides=1, padding='same', input_shape=(512,256,1))(input1)
 
     input2 = Input(shape=(512,256,3))
-    enc_2 = enc_1 = Conv2D(filters=16, kernel_size=(3,3), strides = 1, padding = 'same', input_shape=(512,256,3))(input2)
+    enc_2 = Conv2D(filters=16, kernel_size=(3,3), strides = 1, padding = 'same', input_shape=(512,256,3))(input2)
     enc_3 = concatenate([enc_1,enc_2])
 
     enc_4 = CBR(64,(512,256,32))(enc_3)
