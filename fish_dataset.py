@@ -23,6 +23,9 @@ def load_dataset(dataDir='/data1/train_data/', data_range=range(0,300),test=Fals
         sonarStart = 0
         nightStart = 0
         for i in data_range:
+            if test:
+                if i%3 != 1:
+                    continue
             if not test:
                 if i%3 != 0:
                     continue

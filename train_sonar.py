@@ -3,7 +3,7 @@ import keras.backend as K
 import numpy as np
 from keras.utils import generic_utils
 from keras.optimizers import Adam, SGD
-from models import discriminator_sonar, generator_sonar, GAN_sonar
+from models import discriminator_sonar, generator_sonar, generator2_sonar, GAN_sonar
 from fish_dataset import load_dataset
 from PIL import Image
 import math
@@ -73,7 +73,7 @@ def train():
     gan_loss_weights = [lmd,1]
 
     # make models
-    Generator     = generator_sonar()
+    Generator     = generator2_sonar()
     Generator.compile(loss = 'mae', optimizer=opt_Generator)
     Discriminator = discriminator_sonar()
     Discriminator.trainable = False

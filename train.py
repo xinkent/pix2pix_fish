@@ -3,7 +3,7 @@ import keras.backend as K
 import numpy as np
 from keras.utils import generic_utils
 from keras.optimizers import Adam, SGD
-from models import discriminator, generator, GAN
+from models import discriminator, generator,generator2,GAN
 from fish_dataset import load_dataset
 from PIL import Image
 import math
@@ -56,10 +56,10 @@ def train():
     o.close()
 
     # load data
-    # ds1_first, ds1_last, num_ds1 = 1,    1145, 1145
-    # ds2_first, ds2_last, num_ds2 = 2000, 6749, 4750
-    ds1_first, ds1_last, num_ds1 = 1,    100, 100
-    ds2_first, ds2_last, num_ds2 = 101, 200, 100
+    ds1_first, ds1_last, num_ds1 = 1,    1145, 1145
+    ds2_first, ds2_last, num_ds2 = 2000, 6749, 4750
+    # ds1_first, ds1_last, num_ds1 = 1,    100, 100
+    # ds2_first, ds2_last, num_ds2 = 101, 200, 100
     train_data_i = np.concatenate([np.arange(ds1_first,ds1_last+1)[:int(num_ds1 * 0.7)],
                                  np.arange(ds2_first,ds2_last+1)[:int(num_ds2*0.7)]])
     test_data_i  = np.concatenate([np.arange(ds1_first,ds1_last+1)[int(num_ds1 * 0.7):],
@@ -80,7 +80,7 @@ def train():
 
 
     # make models
-    Generator     = generator()
+    Generator     = generator2()
     Generator.compile(loss = 'mae', optimizer=opt_Generator)
     Discriminator = discriminator()
     Discriminator.trainable = False
