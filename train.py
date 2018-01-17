@@ -4,7 +4,7 @@ import numpy as np
 from keras.utils import generic_utils
 from keras.optimizers import Adam, SGD
 from models import discriminator, generator,generator2,GAN
-from fish_dataset import load_dataset
+from fish_dataset import load_dataset, load_dataset_data_augument
 from PIL import Image
 import math
 import os
@@ -80,7 +80,7 @@ def train():
 
 
     # make models
-    Generator     = generator2()
+    Generator     = generator()
     Generator.compile(loss = 'mae', optimizer=opt_Generator)
     Discriminator = discriminator()
     Discriminator.trainable = False
