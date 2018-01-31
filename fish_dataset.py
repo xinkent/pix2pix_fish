@@ -198,28 +198,30 @@ def load_dataset_data_augument(dataDir='/data1/train_data/', data_range=range(0,
             else:
                 xl = np.random.randint(0,w-256)
                 yl = np.random.randint(0,h-512)
-            img = img[yl:yl+512, xl:xl+256, :]
-            sonar = sonar[yl:yl+512, xl:xl+256,:]
-            night = night[yl:yl+512, xl:xl+256,:]
+            # img = img[yl:yl+512, xl:xl+256, :]
+            # sonar = sonar[yl:yl+512, xl:xl+256,:]
+            # night = night[yl:yl+512, xl:xl+256,:]
             aug_img = aug_img[yl:yl+512, xl:xl+256, :]
             aug_sonar = aug_sonar[yl:yl+512, xl:xl+256,:]
             aug_night = aug_night[yl:yl+512, xl:xl+256,:]
 
-            imgDataset.append(img)
+            # imgDataset.append(img)
             imgDataset.append(aug_img)
-            sonarDataset.append(sonar)
-            sonarDataset.append(aut_sonar)
-            nightDataset.append(night)
+            # sonarDataset.append(sonar)
+            sonarDataset.append(aug_sonar)
+            # nightDataset.append(night)
             nightDataset.append(aug_night)
 
         print("load dataset done")
         return np.array(imgDataset),np.array(sonarDataset),np.array(nightDataset)
 
 def augument(img):
-    flag = np.random.choice([0,1,2])
-    if flag == 1:
+    flag = np.random.choice([0,1,2,3])
+    if flag == 0:
         return ImageOps.mirror(img)
-    if flag == 2:
+    if flag == 1:
         return ImageOps.flip(img)
-    if flag == 3:
+    if flag == 2:
         return ImageOps.flip(ImageOps.mirror(img))
+    if flag == 3:
+        return img
