@@ -103,11 +103,9 @@ def load_dataset_box(dataDir='/data1/train_data/', data_range=range(0,300),test=
         w,h = img.size
         r = 300/min(w,h)
         img   = img.resize((int(r*w), int(r*h)), Image.BILINEAR)
-        night = night.resize((int(r*w), int(r*h)),Image.BILINEAR)
         sonar = sonar.resize((int(r*w), int(r*h)),Image.BILINEAR)
         img   = np.asarray(img)/128.0-1.0
         sonar = (np.asarray(sonar)/128.0-1.0)[:,:,np.newaxis]
-        night = np.asarray(night)/128.0-1.0
         # 512 * 256にランダムクリップ
         h,w,_ = img.shape
         if test:
@@ -118,7 +116,6 @@ def load_dataset_box(dataDir='/data1/train_data/', data_range=range(0,300),test=
             yl = np.random.randint(0,h-512)
         img = img[yl:yl+512, xl:xl+256, :]
         sonar = sonar[yl:yl+512, xl:xl+256,:]
-        night = night[yl:yl+512, xl:xl+256,:]
 
         box_img = img
         box_size = 50
