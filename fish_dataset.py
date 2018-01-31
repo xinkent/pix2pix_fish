@@ -117,11 +117,11 @@ def load_dataset_box(dataDir='/data1/train_data/', data_range=range(0,300),test=
         img = img[yl:yl+512, xl:xl+256, :]
         sonar = sonar[yl:yl+512, xl:xl+256,:]
 
-        box_img = img
-        box_size = 50
+        box_img = np.copy(img)
+        box_size = 150
         xl = np.random.randint(0,256 - 50)
         yl = np.random.randint(0,512 - 50)
-        box_img[xl:xl+box_size, yl:yl_box_size] = 0
+        box_img[xl:xl+box_size, yl:yl+box_size] = 0
         imgDataset.append(img)
         sonarDataset.append(sonar)
         nightDataset.append(box_img)
