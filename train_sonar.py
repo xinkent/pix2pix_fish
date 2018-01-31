@@ -146,6 +146,7 @@ def train():
             save_images(sonar_batch,     resultDir + "/label_"     + str(epoch)+"epoch.png")
             save_images(gt_batch,        resultDir + "/gt_"        + str(epoch)+"epoch.png")
             save_images(generated_batch, resultDir + "/generated_" + str(epoch)+"epoch.png")
+            save_images(night_batch,     resultDir  +"/night_"     + str(epoch)+"epoch.png")
             # for validation data
             gt_batch        = test_gt[test_ind[0:9],:,:,:]
             sonar_batch     = test_sonar[test_ind[0:9],:,:,:]
@@ -154,6 +155,7 @@ def train():
             save_images(sonar_batch,     resultDir + "/vlabel_"     + str(epoch)+"epoch.png")
             save_images(gt_batch,        resultDir + "/vgt_"        + str(epoch)+"epoch.png")
             save_images(generated_batch, resultDir + "/vgenerated_" + str(epoch)+"epoch.png")
+            save_images(night_batch,     resultDir  +"/night_"     + str(epoch)+"epoch.png")
 
             Gan.save_weights(modelDir + 'gan_weights' + "_lambda" + str(lmd) + "_epoch"+ str(epoch) + '.h5')
         out_file.close()
