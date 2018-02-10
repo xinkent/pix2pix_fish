@@ -35,11 +35,11 @@ def discriminator_sonar():
     label_input = Input(shape=(h,w,1))
     gen_output = Input(shape=(h,w,3))
     x1 = CBR(32,(512,256,1), bn=False)(label_input)
-    x2 = CBR(32,(256,128,3),bn=False)(gen_output)
+    x2 = CBR(32,(512,256,3),bn=False)(gen_output)
     x = concatenate([x1,x2])
-    x = CBR(128,(128,64,64))(x)
-    x = CBR(256,(64,32,128))(x)
-    x = CBR(512,(32,16,256))(x)
+    x = CBR(128,(256,128,64))(x)
+    x = CBR(256,(128,64,128))(x)
+    x = CBR(512,(64,32,256))(x)
     x = Conv2D(filters=1,kernel_size=3,strides=1,padding='same')(x)
     x = Activation('sigmoid')(x)
     output = Lambda(lambda x: K.mean(x, axis=[1,2]),output_shape=(1,))(x)
@@ -53,11 +53,11 @@ def discriminator():
     label_input = Input(shape=(h,w,3))
     gen_output = Input(shape=(h,w,3))
     x1 = CBR(32,(512,256,3), bn=False)(label_input)
-    x2 = CBR(32,(256,128,3),bn=False)(gen_output)
+    x2 = CBR(32,(512,256,3),bn=False)(gen_output)
     x = concatenate([x1,x2])
-    x = CBR(128,(128,64,64))(x)
-    x = CBR(256,(64,32,128))(x)
-    x = CBR(512,(32,16,256))(x)
+    x = CBR(128,(256,128,64))(x)
+    x = CBR(256,(128,64,128))(x)
+    x = CBR(512,(64,32,256))(x)
     x = Conv2D(filters=1,kernel_size=3,strides=1,padding='same')(x)
     x = Activation('sigmoid')(x)
     output = Lambda(lambda x: K.mean(x, axis=[1,2]),output_shape=(1,))(x)
@@ -66,7 +66,20 @@ def discriminator():
     return model
 
 
+def discriminator_nocondition():
+    h = 512
+    w = 256
+    img = Input(shape=(h,w,3))
+    x2 = CBR(32,(512,256,3),bn=False)(img)
+    x = CBR(64,(256,128,32))(x)
+    x = CBR(128,(128,64,64))(x)
+    x = CBR(256,(64,32,256))(x)
+    x = Conv2D(filters=1,kernel_size=3,strides=1,padding='same')(x)
+    x = Activation('sigmoid')(x)
+    output = Lambda(lambda x: K.mean(x, axis=[1,2]),output_shape=(1,))(x)
+    model = Model(inputs =[label_input,gen_output], outputs = [output])
 
+    return model
 
 def generator_sonar():
 
@@ -205,4 +218,3 @@ def generator2():
     output = Conv2D(filters=3, kernel_size=(3,3),strides=1,padding="same")(x)
     model = Model(inputs=input, outputs=output)
     return(model)
-
