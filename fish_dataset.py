@@ -3,21 +3,21 @@ from PIL import Image,ImageOps
 from io import BytesIO
 
 
-def load_dataset(dataDir='/data1/train_data/', data_range=range(0,300),test=False, dark=10):
+def load_dataset(dataDir='/data1/train_data/', data_range=range(0,300),test=False, dark=10,exclude = False):
         print("load dataset start")
         print("     from: %s"%dataDir)
         imgDataset    = []
         nightDataset = []
         sonarDataset  = []
-
-        # trainingに使えないデータ(エイがカメラの前を通った場面など)を除去
-        excludes = np.concatenate([np.arange(226,253), np.arange(445,455), np.arange(796, 803), np.arange(2100,2117),
+        if exclude:
+            # trainingに使えないデータ(エイがカメラの前を通った場面など)を除去
+            excludes = np.concatenate([np.arange(226,253), np.arange(445,455), np.arange(796, 803), np.arange(2100,2117),
                                    np.arange(2267, 2317), np.arange(2764, 2835), np.arange(3009, 3029), np.arange(3176, 3230),
                                    np.arange(3467, 3490), np.arange(3665, 3735), np.arange(3927, 4001), np.arange(4306,4308),
                                    np.arange(4416, 4476), np.arange(4737, 4741), np.arange(4846, 4906), np.arange(5406, 5464),
                                    np.arange(5807, 5841), np.arange(6101, 6145)]) # training対象外
-        mask = [d not in excludes for d in data_range]
-        data_range = data_range[mask]
+            mask = [d not in excludes for d in data_range]
+            data_range = data_range[mask]
 
         imgStart   = 0
         sonarStart = 0
@@ -46,14 +46,12 @@ def load_dataset(dataDir='/data1/train_data/', data_range=range(0,300),test=Fals
             img   = np.asarray(img)/128.0-1.0
             sonar = (np.asarray(sonar)/128.0-1.0)[:,:,np.newaxis]
             night = np.asarray(night)/128.0-1.0
-            # 512 * 256にランダムクリップ
+            #512 * 256にランダムクリップ → ランダムを廃止
             h,w,_ = img.shape
-            if test:
-                xl = int(w-256)
-                yl = int(h-512)
-            else:
-                xl = np.random.randint(0,w-256)
-                yl = np.random.randint(0,h-512)
+            xl = int((w-256)/2)
+            yl = int(h-512)
+            # xl = np.random.randint(0,w-256)
+            # yl = np.random.randint(0,h-512)
             img = img[yl:yl+512, xl:xl+256, :]
             sonar = sonar[yl:yl+512, xl:xl+256,:]
             night = night[yl:yl+512, xl:xl+256,:]
@@ -117,13 +115,13 @@ def load_dataset_box(dataDir='/data1/train_data/', data_range=range(0,300),test=
         img = img[yl:yl+512, xl:xl+256, :]
         sonar = sonar[yl:yl+512, xl:xl+256,:]
 
-        box_img = img
-        box_size = 50
-        xl = np.random.randint(0,256 - 50)
-        yl = np.random.randint(0,512 - 50)
-        box_img[xl:xl+box_size, yl:yl+box_size] = 0
         imgDataset.append(img)
         sonarDataset.append(sonar)
+        box_img = np.copy(img)
+        box_size = 150
+        xl = np.random.randint(0,256 - box_size)
+        yl = np.random.randint(0,512 - box_size)
+        box_img[yl:yl+box_size,xl:xl+box_size] = -1
         nightDataset.append(box_img)
 
 
