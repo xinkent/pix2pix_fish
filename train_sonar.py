@@ -4,7 +4,7 @@ import numpy as np
 from keras.utils import generic_utils
 from keras.optimizers import Adam, SGD
 from models import discriminator_sonar, generator_sonar, generator2_sonar, GAN_sonar
-from fish_dataset import load_dataset,load_dataset_data_augument
+from fish_dataset import load_dataset,load_dataset_box
 from PIL import Image
 import math
 import os
@@ -51,14 +51,16 @@ def train():
     o.close()
 
     # load data
-    ds1_first, ds1_last, num_ds1 = 1,    1145, 1145
-    ds2_first, ds2_last, num_ds2 = 2000, 6749, 4750
-    train_data_i = np.concatenate([np.arange(ds1_first,ds1_last+1)[:int(num_ds1 * 0.7)],
-                                 np.arange(ds2_first,ds2_last+1)[:int(num_ds2*0.7)]])
-    test_data_i  = np.concatenate([np.arange(ds1_first,ds1_last+1)[int(num_ds1 * 0.7):],
-                                 np.arange(ds2_first,ds2_last+1)[int(num_ds2*0.7):]])
-    train_gt, train_sonar, train_night = load_dataset(data_range=train_data_i, dark = args.dark)
-    test_gt,  test_sonar,  test_night  = load_dataset(data_range=test_data_i,  dark = args.dark)
+    # ds2_first, ds1_last, num_ds1 = 1,    100, 100
+    # ds2_first, ds2_last, num_ds2 = 2000, 2100, 100
+    ds1_first, ds1_last, num_ds1 = 0,    1100, 1101
+    ds2_first, ds2_last, num_ds2 = 2000, 6108, 4109
+    train_data_i = np.concatenate([np.arange(ds1_first,ds1_last+1)[:int(num_ds1 * 0.8)],
+                                 np.arange(ds2_first,ds2_last+1)[:int(num_ds2*0.8)]])
+    test_data_i  = np.concatenate([np.arange(ds1_first,ds1_last+1)[int(num_ds1 * 0.8):],
+                                 np.arange(ds2_first,ds2_last+1)[int(num_ds2*0.8):]])
+    train_gt, train_sonar, train_night = load_dataset(dataDir='/data1/train_removed/',data_range=train_data_i, dark = args.dark,exclude=False)
+    test_gt,  test_sonar,  test_night  = load_dataset(dataDir='/data1/train_removed/',data_range=test_data_i,  dark = args.dark,exclude=False)
 
     # Create optimizers
     opt_Gan           = Adam(lr=1E-3)
