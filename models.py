@@ -24,7 +24,6 @@ def CBR(ch,shape,bn=True,sample='down',activation=LeakyReLU, dropout=False):
         model.add(LeakyReLU(alpha=0.2))
     else:
         model.add(Activation('relu'))
-
     return model
 
 
@@ -44,8 +43,30 @@ def discriminator_sonar():
     x = Activation('sigmoid')(x)
     output = Lambda(lambda x: K.mean(x, axis=[1,2]),output_shape=(1,))(x)
     model = Model(inputs =[label_input,gen_output], outputs = [output])
-
     return model
+
+def discriminator_sonar_3cond():
+    h = 512
+    w = 256
+    input_s = Input(shape=(h,w,1))
+    input_c = Input(shape=(h,w,3))
+    input_x = Input(shape=(h,w,3))
+    x1 = CBR(32,(512,256,1), bn=False)(input_s)
+    x2 = CBR(32,(512,256,3),bn=False)(input_c)
+    x3 = CBR(32,(512,256,3),bn=False)(input_x)
+    x = concatenate([x1,x2,x3])
+    x = CBR(128,(256,128,96))(x)
+    x = CBR(256,(128,64,128))(x)
+    x = CBR(512,(64,32,256))(x)
+    x = CBR(1024,(32,16,512))(x)
+    x = CBR(1024,(16,8,1024))(x)
+    x = Conv2D(filters=1,kernel_size=3,strides=1,padding='same')(x)
+    x = Activation('sigmoid')(x)
+    output = Lambda(lambda x: K.mean(x, axis=[1,2]),output_shape=(1,))(x)
+    model = Model(inputs =[label_input,gen_output], outputs = [output])
+    return model
+
+
 
 def discriminator_sonar2():
     h = 512
@@ -64,7 +85,6 @@ def discriminator_sonar2():
     x = Activation('sigmoid')(x)
     output = Lambda(lambda x: K.mean(x, axis=[1,2]),output_shape=(1,))(x)
     model = Model(inputs =[label_input,gen_output], outputs = [output])
-
     return model
 
 
@@ -83,7 +103,6 @@ def discriminator():
     x = Activation('sigmoid')(x)
     output = Lambda(lambda x: K.mean(x, axis=[1,2]),output_shape=(1,))(x)
     model = Model(inputs =[label_input,gen_output], outputs = [output])
-
     return model
 
 
@@ -99,7 +118,6 @@ def discriminator_nocondition():
     x = Activation('sigmoid')(x)
     output = Lambda(lambda x: K.mean(x, axis=[1,2]),output_shape=(1,))(x)
     model = Model(inputs =[input_img], outputs = [output])
-
     return model
 
 
@@ -121,7 +139,6 @@ def discriminator_sonar_nobatch():
     x = Dense(1)(x)
     output = Activation('sigmoid')(x)
     model = Model(inputs =[label_input,gen_output], outputs = [output])
-
     return model
 
 def generator_sonar():
@@ -190,7 +207,6 @@ def GAN_sonar(generator, discriminator):
     generated_image = generator([s_input,c_input])
     DCGAN_output = discriminator([s_input,generated_image])
     DCGAN = Model(inputs=[s_input,c_input],outputs=[generated_image, DCGAN_output],name="DCGAN")
-
     return DCGAN
 
 
@@ -199,7 +215,6 @@ def GAN(generator, discriminator):
     generated_image = generator(input)
     DCGAN_output = discriminator([input,generated_image])
     DCGAN = Model(inputs=input,outputs=[generated_image, DCGAN_output],name="DCGAN")
-
     return DCGAN
 
 def GAN_nocond_dis(generator,discriminator):
@@ -208,6 +223,14 @@ def GAN_nocond_dis(generator,discriminator):
     generated_image = generator([s_input,c_input])
     DCGAN_output = discriminator([generated_image])
     DCGAN = Model(input=[s_input,c_input],outputs=[generated_image,DCGAN_output],name="DCGAN")
+    return DCGAN
+
+def GAN_sonar_3cond(generator, discriminator):
+    input_s = Input(shape=(512,256,1))
+    input_c = Input(shape=(512,256,3))
+    generated_image = generator([input_s,input_c])
+    DCGAN_output = discriminator([s_input,generated_image,input_c])
+    DCGAN = Model(inputs=[s_input,c_input],outputs=[generated_image, DCGAN_output],name="DCGAN")
     return DCGAN
 
 # 改良版U-net
